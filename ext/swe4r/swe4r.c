@@ -520,6 +520,187 @@ static VALUE t_swe_mooncross_ut( VALUE self, VALUE x2cross, VALUE tjd_ut, VALUE 
 	return rb_float_new(retval);
 }
 
+
+
+
+static VALUE t_swe_pheno_ut(VALUE self, VALUE julian_ut, VALUE body, VALUE iflag)
+{
+	double results[20];
+	char serr[AS_MAXCH];
+
+	if (swe_pheno_ut(NUM2DBL(julian_ut), NUM2INT(body), NUM2LONG(iflag), results, serr) < 0)
+		rb_raise(rb_eRuntimeError, serr);
+
+	VALUE output = rb_ary_new();
+	for (int i = 0; i < 20; i++)
+		rb_ary_push(output, rb_float_new(results[i]));
+
+	return output;
+}
+
+static VALUE t_swe_sol_eclipse_when_loc(VALUE self, VALUE julian_ut, VALUE lon, VALUE lat, VALUE alt, VALUE iflag)
+{
+
+	double tret[10];
+	double attr[20];
+	double geopos[3];
+	geopos[0] = NUM2DBL(lon);
+	geopos[1] = NUM2DBL(lat);
+	geopos[2] = NUM2DBL(alt);
+  AS_BOOL backward = TRUE;
+	char serr[AS_MAXCH];
+
+	if (swe_sol_eclipse_when_loc(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, tret, attr, backward, serr) < 0)
+		rb_raise(rb_eRuntimeError, serr);
+
+	VALUE _tret = rb_ary_new();
+	for (int i = 0; i < 10; i++)
+		rb_ary_push(_tret, rb_float_new(tret[i]));
+
+	VALUE _attr = rb_ary_new();
+	for (int i = 0; i < 20; i++)
+		rb_ary_push(_attr, rb_float_new(attr[i]));
+
+	VALUE output = rb_ary_new();
+	rb_ary_push(output, _tret);
+	rb_ary_push(output, _attr);
+	return output;
+}
+
+static VALUE t_swe_sol_eclipse_when_glob(VALUE self, VALUE julian_ut, VALUE iflag, VALUE ifltype)
+{
+
+	double tret[10];
+  AS_BOOL backward = TRUE;
+	char serr[AS_MAXCH];
+
+	if (swe_sol_eclipse_when_glob(NUM2DBL(julian_ut), NUM2INT(iflag), NUM2INT(ifltype), tret, backward, serr) < 0)
+		rb_raise(rb_eRuntimeError, serr);
+
+	VALUE _tret = rb_ary_new();
+	for (int i = 0; i < 10; i++)
+		rb_ary_push(_tret, rb_float_new(tret[i]));
+
+	return _tret;
+}
+
+static VALUE t_swe_sol_eclipse_where(VALUE self, VALUE julian_ut, VALUE lon, VALUE lat, VALUE alt, VALUE iflag)
+{
+
+	double attr[20];
+	double geopos[3];
+	geopos[0] = NUM2DBL(lon);
+	geopos[1] = NUM2DBL(lat);
+	geopos[2] = NUM2DBL(alt);
+	char serr[AS_MAXCH];
+
+	if (swe_sol_eclipse_where(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, attr, serr) < 0)
+		rb_raise(rb_eRuntimeError, serr);
+
+	VALUE _attr = rb_ary_new();
+	for (int i = 0; i < 20; i++)
+		rb_ary_push(_attr, rb_float_new(attr[i]));
+
+	return _attr;
+}
+
+static VALUE t_swe_sol_eclipse_how(VALUE self, VALUE julian_ut, VALUE lon, VALUE lat, VALUE alt, VALUE iflag)
+{
+
+	double attr[20];
+	double geopos[3];
+	geopos[0] = NUM2DBL(lon);
+	geopos[1] = NUM2DBL(lat);
+	geopos[2] = NUM2DBL(alt);
+	char serr[AS_MAXCH];
+
+	if (swe_sol_eclipse_how(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, attr, serr) < 0)
+		rb_raise(rb_eRuntimeError, serr);
+
+	VALUE _attr = rb_ary_new();
+	for (int i = 0; i < 20; i++)
+		rb_ary_push(_attr, rb_float_new(attr[i]));
+
+	return _attr;
+}
+
+static VALUE t_swe_lun_eclipse_when_loc(VALUE self, VALUE julian_ut, VALUE lon, VALUE lat, VALUE alt, VALUE iflag)
+{
+
+	double tret[10];
+	double attr[20];
+	double geopos[3];
+	geopos[0] = NUM2DBL(lon);
+	geopos[1] = NUM2DBL(lat);
+	geopos[2] = NUM2DBL(alt);
+  AS_BOOL backward = TRUE;
+	char serr[AS_MAXCH];
+
+	if (swe_lun_eclipse_when_loc(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, tret, attr, backward, serr) < 0)
+		rb_raise(rb_eRuntimeError, serr);
+
+	VALUE _tret = rb_ary_new();
+	for (int i = 0; i < 10; i++)
+		rb_ary_push(_tret, rb_float_new(tret[i]));
+
+	VALUE _attr = rb_ary_new();
+	for (int i = 0; i < 20; i++)
+		rb_ary_push(_attr, rb_float_new(attr[i]));
+
+	VALUE output = rb_ary_new();
+	rb_ary_push(output, _tret);
+	rb_ary_push(output, _attr);
+	return output;
+}
+
+static VALUE t_swe_lun_eclipse_when(VALUE self, VALUE julian_ut, VALUE iflag, VALUE ifltype)
+{
+
+	double tret[10];
+  AS_BOOL backward = TRUE;
+	char serr[AS_MAXCH];
+
+	if (swe_lun_eclipse_when(NUM2DBL(julian_ut), NUM2INT(iflag), NUM2INT(ifltype), tret, backward, serr) < 0)
+		rb_raise(rb_eRuntimeError, serr);
+
+	VALUE _tret = rb_ary_new();
+	for (int i = 0; i < 10; i++)
+		rb_ary_push(_tret, rb_float_new(tret[i]));
+
+	return _tret;
+}
+
+static VALUE t_swe_lun_eclipse_how(VALUE self, VALUE julian_ut, VALUE lon, VALUE lat, VALUE alt, VALUE iflag)
+{
+
+	double attr[20];
+	double geopos[3];
+	geopos[0] = NUM2DBL(lon);
+	geopos[1] = NUM2DBL(lat);
+	geopos[2] = NUM2DBL(alt);
+	char serr[AS_MAXCH];
+
+	if (swe_lun_eclipse_how(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, attr, serr) < 0)
+		rb_raise(rb_eRuntimeError, serr);
+
+	VALUE _attr = rb_ary_new();
+	for (int i = 0; i < 20; i++)
+		rb_ary_push(_attr, rb_float_new(attr[i]));
+
+	return _attr;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 void Init_swe4r()
 {
 	// Module
@@ -550,6 +731,41 @@ void Init_swe4r()
 	// rb_define_module_function(rb_mSwe4r, "swe_mooncross_node_ut", t_swe_mooncross_node_ut, 4);
 	// rb_define_module_function(rb_mSwe4r, "swe_helio_cross", t_swe_helio_cross, 4);
 	// rb_define_module_function(rb_mSwe4r, "swe_helio_cross_ut", t_swe_helio_cross_ut, 4);
+
+	rb_define_module_function(rb_mSwe4r, "swe_pheno_ut", t_swe_pheno_ut, 3);
+
+	// swe_sol_eclipse_when_loc(tjd...) finds the next eclipse for a given geographic position;
+	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_when_loc", t_swe_sol_eclipse_when_loc, 5);
+
+// swe_sol_eclipse_when_glob(tjd...) finds the next eclipse globally;
+	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_when_glob", t_swe_sol_eclipse_when_glob, 3);
+
+// swe_sol_eclipse_where() computes the geographic location of a solar eclipse for a given tjd;
+	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_where", t_swe_sol_eclipse_where, 5);
+
+// swe_sol_eclipse_how() computes attributes of a solar eclipse for a given tjd, geographic longitude, latitude and height.
+	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_how", t_swe_sol_eclipse_how, 5);
+
+// Lunar eclipses:
+
+// swe_lun_eclipse_when_loc(tjd...) finds the next lunar eclipse for a given geographic position;
+	rb_define_module_function(rb_mSwe4r, "swe_lun_eclipse_when_loc", t_swe_lun_eclipse_when_loc, 5);
+
+// swe_lun_eclipse_when(tjd...) finds the next lunar eclipse;
+	rb_define_module_function(rb_mSwe4r, "swe_lun_eclipse_when", t_swe_lun_eclipse_when, 3);
+
+// swe_lun_eclipse_how() computes the attributes of a lunar eclipse for a given tjd.
+	rb_define_module_function(rb_mSwe4r, "swe_lun_eclipse_how", t_swe_lun_eclipse_how, 5);
+
+// Risings, settings, and meridian transits of planets and stars:
+// swe_rise_trans();
+
+// swe_rise_trans_true_hor() returns rising and setting times for a local horizon with altitude != 0.
+// Occultations of planets by the moon:
+// These functions can also be used for solar eclipses. But they are slightly less efficient.
+// swe_lun_occult_when_loc(tjd...) finds the next occultation for a body and a given geographic position;
+// swe_lun_occult_when_glob(tjd...) finds the next occultation of a given body globally;
+// swe_lun_occult_where() computes the geographic location of an occultation for a given tjd.
 
 	// Constants
 
@@ -604,6 +820,8 @@ void Init_swe4r()
 	rb_define_const(rb_mSwe4r, "SEFLG_TOPOCTR", INT2FIX(SEFLG_TOPOCTR));
 	rb_define_const(rb_mSwe4r, "SEFLG_SIDEREAL", INT2FIX(SEFLG_SIDEREAL));
 	rb_define_const(rb_mSwe4r, "SEFLG_ICRS", INT2FIX(SEFLG_ICRS));
+
+	rb_define_const(rb_mSwe4r, "SE_ECL_TOTAL", INT2FIX(SE_ECL_TOTAL));
 
 	/* sidereal modes (ayanamsas) */
 	rb_define_const(rb_mSwe4r, "SE_SIDM_FAGAN_BRADLEY", INT2FIX(SE_SIDM_FAGAN_BRADLEY)); // 0
