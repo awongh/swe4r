@@ -1,4 +1,5 @@
 require 'test/unit'
+require 'json'
 require 'swe4r'
 
 class Swe4rTest < Test::Unit::TestCase
@@ -174,6 +175,175 @@ class Swe4rTest < Test::Unit::TestCase
     assert_equal( -77.98034646731611, b )
     assert_equal 1.0, c
   end
+
+  def test_swe_pheno_ut
+    result = Swe4r::swe_pheno_ut(2444838.972916667, Swe4r::SE_SUN, Swe4r::SEFLG_MOSEPH)
+
+    assert_equal(
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.5271817236383283,
+        -26.835611616502774,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0],result)
+  end
+
+  # swe_sol_eclipse_when_loc(tjd...) finds the next eclipse for a given geographic position;
+  def test_swe_sol_eclipse_when_loc
+    Swe4r::swe_sol_eclipse_when_loc(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+  end
+
+  # swe_sol_eclipse_when_glob(tjd...) finds the next eclipse globally;
+  def test_swe_sol_eclipse_when_glob
+    result = Swe4r::swe_sol_eclipse_when_glob(2444838.972916667, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL)
+    test_data = [
+      2444816.656780241,
+      2444816.649699564,
+      2444816.5496100746,
+      2444816.764137677,
+      2444816.5954617294,
+      2444816.7181679048,
+      2444816.595788629,
+      2444816.717870053,
+      0.0,
+      0.0
+    ]
+    assert_equal(test_data, result)
+  end
+
+  # swe_sol_eclipse_where() computes the geographic location of a solar eclipse for a given tjd;
+  def test_swe_sol_eclipse_where
+    Swe4r::swe_sol_eclipse_where(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+  end
+
+  # swe_sol_eclipse_how() computes attributes of a solar eclipse for a given tjd, geographic longitude, latitude and height.
+  def test_swe_sol_eclipse_how
+    Swe4r::swe_sol_eclipse_how(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+  end
+
+  # Lunar eclipses:
+
+  # swe_lun_eclipse_when_loc(tjd...) finds the next lunar eclipse for a given geographic position;
+  def test_swe_lun_eclipse_when_loc
+    result = Swe4r::swe_lun_eclipse_when_loc(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+    test_data = [
+      [
+        2444802.699216498,
+        0.0,
+        2444802.642522555,
+        2444802.7559142746,
+        0.0,
+        0.0,
+        2444802.5881501106,
+        2444802.8101914083,
+        0.0,
+        0.0
+      ],
+      [
+        0.5487861737439879,
+        1.5824536419454307,
+        0.0,
+        0.0,
+        73.89769546498894,
+        27.775810896814107,
+        27.806572310066,
+        0.6559847467475777,
+        0.5487861737439879,
+        119.0,
+        59.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    ]
+    assert_equal(test_data, result)
+  end
+
+  # swe_lun_eclipse_when(tjd...) finds the next lunar eclipse;
+  def test_swe_lun_eclipse_when
+    result = Swe4r::swe_lun_eclipse_when(2444838.972916667, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL)
+    test_data = [
+      2444122.954302467,
+      0.0,
+      2444122.887636504,
+      2444123.0209684223,
+      2444122.9388237395,
+      2444122.969784548,
+      2444122.8483262495,
+      2444123.060291385,
+      0.0,
+      0.0
+    ]
+    assert_equal(test_data, result)
+  end
+
+  # swe_lun_eclipse_how() computes the attributes of a lunar eclipse for a given tjd.
+  def test_swe_lun_eclipse_how
+    result = Swe4r::swe_lun_eclipse_how(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+    test_data = [
+      0.0,
+      -103.94980007744492,
+      0.0,
+      0.0,
+      47.80877365920145,
+      -1.380322934446492,
+      -1.380322934446492,
+      0.0,
+      0.0,
+      -99999999.0,
+      -99999999.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+    assert_equal(test_data, result)
+  end
+
+  # maybe later
+
+  # Risings, settings, and meridian transits of planets and stars:
+  # swe_rise_trans();
+
+  # swe_rise_trans_true_hor() returns rising and setting times for a local horizon with altitude != 0.
+  # Occultations of planets by the moon:
+  # These functions can also be used for solar eclipses. But they are slightly less efficient.
+  # swe_lun_occult_when_loc(tjd...) finds the next occultation for a body and a given geographic position;
+  # swe_lun_occult_when_glob(tjd...) finds the next occultation of a given body globally;
+  # swe_lun_occult_where() computes the geographic location of an occultation for a given tjd.
+
+
+
+
+
+
+
 
 end
 
