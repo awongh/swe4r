@@ -584,24 +584,29 @@ static VALUE t_swe_sol_eclipse_when_glob(VALUE self, VALUE julian_ut, VALUE ifla
 	return _tret;
 }
 
-static VALUE t_swe_sol_eclipse_where(VALUE self, VALUE julian_ut, VALUE lon, VALUE lat, VALUE alt, VALUE iflag)
+static VALUE t_swe_sol_eclipse_where(VALUE self, VALUE julian_ut, VALUE iflag)
 {
 
 	double attr[20];
-	double geopos[3];
-	geopos[0] = NUM2DBL(lon);
-	geopos[1] = NUM2DBL(lat);
-	geopos[2] = NUM2DBL(alt);
+	double geopos_res[2];
 	char serr[AS_MAXCH];
 
-	if (swe_sol_eclipse_where(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, attr, serr) < 0)
+	if (swe_sol_eclipse_where(NUM2DBL(julian_ut), NUM2INT(iflag), geopos_res, attr, serr) < 0)
 		rb_raise(rb_eRuntimeError, serr);
+
+  // geopos results
+	VALUE _geopos_res = rb_ary_new();
+	for (int i = 0; i < 2; i++)
+		rb_ary_push(_geopos_res, rb_float_new(geopos_res[i]));
 
 	VALUE _attr = rb_ary_new();
 	for (int i = 0; i < 20; i++)
 		rb_ary_push(_attr, rb_float_new(attr[i]));
 
-	return _attr;
+	VALUE output = rb_ary_new();
+	rb_ary_push(output, _geopos_res);
+	rb_ary_push(output, _attr);
+	return output;
 }
 
 static VALUE t_swe_sol_eclipse_how(VALUE self, VALUE julian_ut, VALUE lon, VALUE lat, VALUE alt, VALUE iflag)
@@ -741,7 +746,7 @@ void Init_swe4r()
 	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_when_glob", t_swe_sol_eclipse_when_glob, 3);
 
 // swe_sol_eclipse_where() computes the geographic location of a solar eclipse for a given tjd;
-	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_where", t_swe_sol_eclipse_where, 5);
+	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_where", t_swe_sol_eclipse_where, 2);
 
 // swe_sol_eclipse_how() computes attributes of a solar eclipse for a given tjd, geographic longitude, latitude and height.
 	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_how", t_swe_sol_eclipse_how, 5);
@@ -822,6 +827,11 @@ void Init_swe4r()
 	rb_define_const(rb_mSwe4r, "SEFLG_ICRS", INT2FIX(SEFLG_ICRS));
 
 	rb_define_const(rb_mSwe4r, "SE_ECL_TOTAL", INT2FIX(SE_ECL_TOTAL));
+	rb_define_const(rb_mSwe4r, "SE_ECL_CENTRAL", INT2FIX(SE_ECL_CENTRAL));
+	rb_define_const(rb_mSwe4r, "SE_ECL_NONCENTRAL", INT2FIX(SE_ECL_NONCENTRAL));
+	rb_define_const(rb_mSwe4r, "SE_ECL_ANNULAR", INT2FIX(SE_ECL_ANNULAR));
+	rb_define_const(rb_mSwe4r, "SE_ECL_PARTIAL", INT2FIX(SE_ECL_PARTIAL));
+	rb_define_const(rb_mSwe4r, "SE_ECL_ANNULAR_TOTAL", INT2FIX(SE_ECL_ANNULAR_TOTAL));
 
 	/* sidereal modes (ayanamsas) */
 	rb_define_const(rb_mSwe4r, "SE_SIDM_FAGAN_BRADLEY", INT2FIX(SE_SIDM_FAGAN_BRADLEY)); // 0

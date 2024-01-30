@@ -228,7 +228,8 @@ class Swe4rTest < Test::Unit::TestCase
 
   # swe_sol_eclipse_where() computes the geographic location of a solar eclipse for a given tjd;
   def test_swe_sol_eclipse_where
-    Swe4r::swe_sol_eclipse_where(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+    result = Swe4r::swe_sol_eclipse_where(2444838.972916667, Swe4r::SEFLG_MOSEPH)
+    assert_not_nil(result)
   end
 
   # swe_sol_eclipse_how() computes attributes of a solar eclipse for a given tjd, geographic longitude, latitude and height.
