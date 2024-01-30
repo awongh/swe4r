@@ -205,7 +205,37 @@ class Swe4rTest < Test::Unit::TestCase
 
   # swe_sol_eclipse_when_loc(tjd...) finds the next eclipse for a given geographic position;
   def test_swe_sol_eclipse_when_loc
-    Swe4r::swe_sol_eclipse_when_loc(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+    res = Swe4r::swe_sol_eclipse_when_loc(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+
+    expect_max_ecl_time = 2444640.3728770674
+    max_ecl_time =  res[1][1]
+    assert_equal(expect_max_ecl_time, max_ecl_time)
+
+    eclipse_type = res[0]
+    type_results = []
+
+    type_results << "SE_ECL_TOTAL" if (eclipse_type & Swe4r::SE_ECL_TOTAL) == Swe4r::SE_ECL_TOTAL
+    type_results << "SE_ECL_CENTRAL" if (eclipse_type & Swe4r::SE_ECL_CENTRAL) == Swe4r::SE_ECL_CENTRAL
+    type_results << "SE_ECL_NONCENTRAL" if (eclipse_type & Swe4r::SE_ECL_NONCENTRAL) == Swe4r::SE_ECL_NONCENTRAL
+    type_results << "SE_ECL_ANNULAR" if (eclipse_type & Swe4r::SE_ECL_ANNULAR) == Swe4r::SE_ECL_ANNULAR
+    type_results << "SE_ECL_PARTIAL" if (eclipse_type & Swe4r::SE_ECL_PARTIAL) == Swe4r::SE_ECL_PARTIAL
+    type_results << "SE_ECL_ANNULAR_TOTAL" if (eclipse_type & Swe4r::SE_ECL_ANNULAR_TOTAL) == Swe4r::SE_ECL_ANNULAR_TOTAL
+    type_results << "SE_ECL_VISIBLE" if (eclipse_type & Swe4r::SE_ECL_VISIBLE) == Swe4r::SE_ECL_VISIBLE
+    type_results << "SE_ECL_MAX_VISIBLE" if (eclipse_type & Swe4r::SE_ECL_MAX_VISIBLE) == Swe4r::SE_ECL_MAX_VISIBLE
+    type_results << "SE_ECL_1ST_VISIBLE" if (eclipse_type & Swe4r::SE_ECL_1ST_VISIBLE) == Swe4r::SE_ECL_1ST_VISIBLE
+    type_results << "SE_ECL_2ND_VISIBLE" if (eclipse_type & Swe4r::SE_ECL_2ND_VISIBLE) == Swe4r::SE_ECL_2ND_VISIBLE
+    type_results << "SE_ECL_3RD_VISIBLE" if (eclipse_type & Swe4r::SE_ECL_3RD_VISIBLE) == Swe4r::SE_ECL_3RD_VISIBLE
+    type_results << "SE_ECL_4TH_VISIBLE" if (eclipse_type & Swe4r::SE_ECL_4TH_VISIBLE) == Swe4r::SE_ECL_4TH_VISIBLE
+
+    expected_type_results = [
+      "SE_ECL_PARTIAL",
+      "SE_ECL_VISIBLE",
+      "SE_ECL_MAX_VISIBLE",
+      "SE_ECL_1ST_VISIBLE",
+      "SE_ECL_4TH_VISIBLE"
+    ]
+
+    assert_equal(expected_type_results, type_results)
   end
 
   # swe_sol_eclipse_when_glob(tjd...) finds the next eclipse globally;

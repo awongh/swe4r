@@ -550,8 +550,12 @@ static VALUE t_swe_sol_eclipse_when_loc(VALUE self, VALUE julian_ut, VALUE lon, 
   AS_BOOL backward = TRUE;
 	char serr[AS_MAXCH];
 
-	if (swe_sol_eclipse_when_loc(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, tret, attr, backward, serr) < 0)
+  int retval = 0;
+	retval = swe_sol_eclipse_when_loc(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, tret, attr, backward, serr);
+  if (retval == ERR)
 		rb_raise(rb_eRuntimeError, serr);
+  VALUE ret_num = INT2NUM(retval);
+
 
 	VALUE _tret = rb_ary_new();
 	for (int i = 0; i < 10; i++)
@@ -562,6 +566,7 @@ static VALUE t_swe_sol_eclipse_when_loc(VALUE self, VALUE julian_ut, VALUE lon, 
 		rb_ary_push(_attr, rb_float_new(attr[i]));
 
 	VALUE output = rb_ary_new();
+	rb_ary_push(output, ret_num);
 	rb_ary_push(output, _tret);
 	rb_ary_push(output, _attr);
 	return output;
@@ -832,6 +837,12 @@ void Init_swe4r()
 	rb_define_const(rb_mSwe4r, "SE_ECL_ANNULAR", INT2FIX(SE_ECL_ANNULAR));
 	rb_define_const(rb_mSwe4r, "SE_ECL_PARTIAL", INT2FIX(SE_ECL_PARTIAL));
 	rb_define_const(rb_mSwe4r, "SE_ECL_ANNULAR_TOTAL", INT2FIX(SE_ECL_ANNULAR_TOTAL));
+	rb_define_const(rb_mSwe4r, "SE_ECL_VISIBLE", INT2FIX(SE_ECL_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_MAX_VISIBLE", INT2FIX(SE_ECL_MAX_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_1ST_VISIBLE", INT2FIX(SE_ECL_1ST_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_2ND_VISIBLE", INT2FIX(SE_ECL_2ND_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_3RD_VISIBLE", INT2FIX(SE_ECL_3RD_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_4TH_VISIBLE", INT2FIX(SE_ECL_4TH_VISIBLE));
 
 	/* sidereal modes (ayanamsas) */
 	rb_define_const(rb_mSwe4r, "SE_SIDM_FAGAN_BRADLEY", INT2FIX(SE_SIDM_FAGAN_BRADLEY)); // 0
