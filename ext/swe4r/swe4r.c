@@ -579,14 +579,21 @@ static VALUE t_swe_sol_eclipse_when_glob(VALUE self, VALUE julian_ut, VALUE ifla
   AS_BOOL backward = TRUE;
 	char serr[AS_MAXCH];
 
-	if (swe_sol_eclipse_when_glob(NUM2DBL(julian_ut), NUM2INT(iflag), NUM2INT(ifltype), tret, backward, serr) < 0)
+  int retval = 0;
+	retval = swe_sol_eclipse_when_glob(NUM2DBL(julian_ut), NUM2INT(iflag), NUM2INT(ifltype), tret, backward, serr);
+  if (retval == ERR)
 		rb_raise(rb_eRuntimeError, serr);
+  VALUE ret_num = INT2NUM(retval);
 
 	VALUE _tret = rb_ary_new();
 	for (int i = 0; i < 10; i++)
 		rb_ary_push(_tret, rb_float_new(tret[i]));
 
-	return _tret;
+	VALUE output = rb_ary_new();
+	rb_ary_push(output, ret_num);
+	rb_ary_push(output, _tret);
+
+	return output;
 }
 
 static VALUE t_swe_sol_eclipse_where(VALUE self, VALUE julian_ut, VALUE iflag)
@@ -743,28 +750,15 @@ void Init_swe4r()
 	// rb_define_module_function(rb_mSwe4r, "swe_helio_cross_ut", t_swe_helio_cross_ut, 4);
 
 	rb_define_module_function(rb_mSwe4r, "swe_pheno_ut", t_swe_pheno_ut, 3);
-
-	// swe_sol_eclipse_when_loc(tjd...) finds the next eclipse for a given geographic position;
 	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_when_loc", t_swe_sol_eclipse_when_loc, 5);
-
-// swe_sol_eclipse_when_glob(tjd...) finds the next eclipse globally;
 	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_when_glob", t_swe_sol_eclipse_when_glob, 3);
-
-// swe_sol_eclipse_where() computes the geographic location of a solar eclipse for a given tjd;
 	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_where", t_swe_sol_eclipse_where, 2);
-
-// swe_sol_eclipse_how() computes attributes of a solar eclipse for a given tjd, geographic longitude, latitude and height.
 	rb_define_module_function(rb_mSwe4r, "swe_sol_eclipse_how", t_swe_sol_eclipse_how, 5);
 
 // Lunar eclipses:
 
-// swe_lun_eclipse_when_loc(tjd...) finds the next lunar eclipse for a given geographic position;
 	rb_define_module_function(rb_mSwe4r, "swe_lun_eclipse_when_loc", t_swe_lun_eclipse_when_loc, 5);
-
-// swe_lun_eclipse_when(tjd...) finds the next lunar eclipse;
 	rb_define_module_function(rb_mSwe4r, "swe_lun_eclipse_when", t_swe_lun_eclipse_when, 3);
-
-// swe_lun_eclipse_how() computes the attributes of a lunar eclipse for a given tjd.
 	rb_define_module_function(rb_mSwe4r, "swe_lun_eclipse_how", t_swe_lun_eclipse_how, 5);
 
 // Risings, settings, and meridian transits of planets and stars:

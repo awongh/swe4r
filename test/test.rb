@@ -242,18 +242,38 @@ class Swe4rTest < Test::Unit::TestCase
   def test_swe_sol_eclipse_when_glob
     result = Swe4r::swe_sol_eclipse_when_glob(2444838.972916667, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL)
     test_data = [
-      2444816.656780241,
-      2444816.649699564,
-      2444816.5496100746,
-      2444816.764137677,
-      2444816.5954617294,
-      2444816.7181679048,
-      2444816.595788629,
-      2444816.717870053,
-      0.0,
-      0.0
+      5,
+      [
+        2444816.656780241,
+        2444816.649699564,
+        2444816.5496100746,
+        2444816.764137677,
+        2444816.5954617294,
+        2444816.7181679048,
+        2444816.595788629,
+        2444816.717870053,
+        0.0,
+        0.0
+      ]
     ]
     assert_equal(test_data, result)
+
+    eclipse_type = result[0]
+    type_results = []
+
+    type_results << "SE_ECL_TOTAL" if (eclipse_type & Swe4r::SE_ECL_TOTAL) == Swe4r::SE_ECL_TOTAL
+    type_results << "SE_ECL_CENTRAL" if (eclipse_type & Swe4r::SE_ECL_CENTRAL) == Swe4r::SE_ECL_CENTRAL
+    type_results << "SE_ECL_NONCENTRAL" if (eclipse_type & Swe4r::SE_ECL_NONCENTRAL) == Swe4r::SE_ECL_NONCENTRAL
+    type_results << "SE_ECL_ANNULAR" if (eclipse_type & Swe4r::SE_ECL_ANNULAR) == Swe4r::SE_ECL_ANNULAR
+    type_results << "SE_ECL_PARTIAL" if (eclipse_type & Swe4r::SE_ECL_PARTIAL) == Swe4r::SE_ECL_PARTIAL
+    type_results << "SE_ECL_ANNULAR_TOTAL" if (eclipse_type & Swe4r::SE_ECL_ANNULAR_TOTAL) == Swe4r::SE_ECL_ANNULAR_TOTAL
+
+    expected_type_results = [
+      "SE_ECL_TOTAL",
+      "SE_ECL_CENTRAL"
+    ]
+
+    assert_equal(expected_type_results, type_results)
   end
 
   # swe_sol_eclipse_where() computes the geographic location of a solar eclipse for a given tjd;
