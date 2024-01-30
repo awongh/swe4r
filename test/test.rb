@@ -315,7 +315,6 @@ class Swe4rTest < Test::Unit::TestCase
     # puts JSON.pretty_generate type_results
     result = Swe4r::swe_sol_eclipse_how(2444816.656780241, 134.095226285374, 53.26284601844857, 0 , Swe4r::SEFLG_MOSEPH)
 
-    # SE_ECL_TOTAL or SE_ECL_ANNULAR or SE_ECL_PARTIAL
     eclipse_type = result[0]
     type_results = []
 
@@ -335,7 +334,9 @@ class Swe4rTest < Test::Unit::TestCase
   # swe_lun_eclipse_when_loc(tjd...) finds the next lunar eclipse for a given geographic position;
   def test_swe_lun_eclipse_when_loc
     result = Swe4r::swe_lun_eclipse_when_loc(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+
     test_data = [
+      29584,
       [
         2444802.699216498,
         0.0,
@@ -371,7 +372,21 @@ class Swe4rTest < Test::Unit::TestCase
         0.0
       ]
     ]
+
     assert_equal(test_data, result)
+
+    eclipse_type = result[0]
+    type_results = []
+
+    type_results << "SE_ECL_TOTAL" if (eclipse_type & Swe4r::SE_ECL_TOTAL) == Swe4r::SE_ECL_TOTAL
+    type_results << "SE_ECL_ANNULAR" if (eclipse_type & Swe4r::SE_ECL_PENUMBRAL) == Swe4r::SE_ECL_PENUMBRAL
+    type_results << "SE_ECL_PARTIAL" if (eclipse_type & Swe4r::SE_ECL_PARTIAL) == Swe4r::SE_ECL_PARTIAL
+
+    expected_type_results = [
+      "SE_ECL_PARTIAL",
+    ]
+
+    assert_equal(expected_type_results, type_results)
   end
 
   # swe_lun_eclipse_when(tjd...) finds the next lunar eclipse;
@@ -389,7 +404,20 @@ class Swe4rTest < Test::Unit::TestCase
       0.0,
       0.0
     ]
-    assert_equal(test_data, result)
+
+    assert_equal(test_data, result[1])
+    eclipse_type = result[0]
+    type_results = []
+
+    type_results << "SE_ECL_TOTAL" if (eclipse_type & Swe4r::SE_ECL_TOTAL) == Swe4r::SE_ECL_TOTAL
+    type_results << "SE_ECL_ANNULAR" if (eclipse_type & Swe4r::SE_ECL_PENUMBRAL) == Swe4r::SE_ECL_PENUMBRAL
+    type_results << "SE_ECL_PARTIAL" if (eclipse_type & Swe4r::SE_ECL_PARTIAL) == Swe4r::SE_ECL_PARTIAL
+
+    expected_type_results = [
+      "SE_ECL_TOTAL",
+    ]
+
+    assert_equal(expected_type_results, type_results)
   end
 
   # swe_lun_eclipse_how() computes the attributes of a lunar eclipse for a given tjd.
