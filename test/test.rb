@@ -277,13 +277,35 @@ class Swe4rTest < Test::Unit::TestCase
   end
 
   # swe_sol_eclipse_where() computes the geographic location of a solar eclipse for a given tjd;
-  def test_swe_sol_eclipse_where
+  def test_swe_sol_eclipse_where_no_ecl
+
     result = Swe4r::swe_sol_eclipse_where(2444838.972916667, Swe4r::SEFLG_MOSEPH)
-    assert_not_nil(result)
+    # no eclipse
+    assert_equal(0, result[0])
+  end
+
+  def test_swe_sol_eclipse_where
+    result = Swe4r::swe_sol_eclipse_where(2444816.656780241, Swe4r::SEFLG_MOSEPH)
+    eclipse_type = result[0]
+    type_results = []
+
+    type_results << "SE_ECL_TOTAL" if (eclipse_type & Swe4r::SE_ECL_TOTAL) == Swe4r::SE_ECL_TOTAL
+    type_results << "SE_ECL_CENTRAL" if (eclipse_type & Swe4r::SE_ECL_CENTRAL) == Swe4r::SE_ECL_CENTRAL
+    type_results << "SE_ECL_NONCENTRAL" if (eclipse_type & Swe4r::SE_ECL_NONCENTRAL) == Swe4r::SE_ECL_NONCENTRAL
+    type_results << "SE_ECL_ANNULAR" if (eclipse_type & Swe4r::SE_ECL_ANNULAR) == Swe4r::SE_ECL_ANNULAR
+    type_results << "SE_ECL_PARTIAL" if (eclipse_type & Swe4r::SE_ECL_PARTIAL) == Swe4r::SE_ECL_PARTIAL
+
+    expected_type_results = [
+      "SE_ECL_TOTAL",
+      "SE_ECL_CENTRAL"
+    ]
+
+    assert_equal(expected_type_results, type_results)
   end
 
   # swe_sol_eclipse_how() computes attributes of a solar eclipse for a given tjd, geographic longitude, latitude and height.
   def test_swe_sol_eclipse_how
+
     Swe4r::swe_sol_eclipse_how(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
   end
 

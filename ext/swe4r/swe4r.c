@@ -603,8 +603,11 @@ static VALUE t_swe_sol_eclipse_where(VALUE self, VALUE julian_ut, VALUE iflag)
 	double geopos_res[2];
 	char serr[AS_MAXCH];
 
-	if (swe_sol_eclipse_where(NUM2DBL(julian_ut), NUM2INT(iflag), geopos_res, attr, serr) < 0)
+  int retval = 0;
+	retval = swe_sol_eclipse_where(NUM2DBL(julian_ut), NUM2INT(iflag), geopos_res, attr, serr);
+  if (retval == ERR)
 		rb_raise(rb_eRuntimeError, serr);
+  VALUE ret_num = INT2NUM(retval);
 
   // geopos results
 	VALUE _geopos_res = rb_ary_new();
@@ -616,6 +619,7 @@ static VALUE t_swe_sol_eclipse_where(VALUE self, VALUE julian_ut, VALUE iflag)
 		rb_ary_push(_attr, rb_float_new(attr[i]));
 
 	VALUE output = rb_ary_new();
+	rb_ary_push(output, ret_num);
 	rb_ary_push(output, _geopos_res);
 	rb_ary_push(output, _attr);
 	return output;
