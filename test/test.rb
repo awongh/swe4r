@@ -421,31 +421,82 @@ class Swe4rTest < Test::Unit::TestCase
   end
 
   # swe_lun_eclipse_how() computes the attributes of a lunar eclipse for a given tjd.
-  def test_swe_lun_eclipse_how
+  def test_swe_lun_eclipse_how_no_ecl
+
     result = Swe4r::swe_lun_eclipse_how(2444838.972916667, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+
     test_data = [
-      0.0,
-      -103.94980007744492,
-      0.0,
-      0.0,
-      47.80877365920145,
-      -1.380322934446492,
-      -1.380322934446492,
-      0.0,
-      0.0,
-      -99999999.0,
-      -99999999.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0
+      0,
+      [
+        0.0,
+        -103.94980007744492,
+        0.0,
+        0.0,
+        47.80877365920145,
+        -1.380322934446492,
+        -1.380322934446492,
+        0.0,
+        0.0,
+        -99999999.0,
+        -99999999.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
     ]
+
     assert_equal(test_data, result)
+  end
+
+  def test_swe_lun_eclipse_how
+
+    result = Swe4r::swe_lun_eclipse_how(2444802.699216498, 45.45, -112.183333, 0 , Swe4r::SEFLG_MOSEPH)
+    test_data = [
+      16,
+      [
+        0.5487861737439879,
+        1.5824536419454307,
+        0.0,
+        0.0,
+        73.89769546498894,
+        27.775810896814107,
+        27.806572310066,
+        0.6559847467475777,
+        0.5487861737439879,
+        119.0,
+        59.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    ]
+
+    assert_equal(test_data, result)
+
+    eclipse_type = result[0]
+    type_results = []
+
+    type_results << "SE_ECL_TOTAL" if (eclipse_type & Swe4r::SE_ECL_TOTAL) == Swe4r::SE_ECL_TOTAL
+    type_results << "SE_ECL_ANNULAR" if (eclipse_type & Swe4r::SE_ECL_PENUMBRAL) == Swe4r::SE_ECL_PENUMBRAL
+    type_results << "SE_ECL_PARTIAL" if (eclipse_type & Swe4r::SE_ECL_PARTIAL) == Swe4r::SE_ECL_PARTIAL
+
+    expected_type_results = [
+      "SE_ECL_PARTIAL",
+    ]
+
+    assert_equal(expected_type_results, type_results)
   end
 
   # maybe later
