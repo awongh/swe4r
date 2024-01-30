@@ -635,14 +635,20 @@ static VALUE t_swe_sol_eclipse_how(VALUE self, VALUE julian_ut, VALUE lon, VALUE
 	geopos[2] = NUM2DBL(alt);
 	char serr[AS_MAXCH];
 
-	if (swe_sol_eclipse_how(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, attr, serr) < 0)
+  int retval = 0;
+	retval = swe_sol_eclipse_how(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, attr, serr);
+  if (retval == ERR)
 		rb_raise(rb_eRuntimeError, serr);
+  VALUE ret_num = INT2NUM(retval);
 
 	VALUE _attr = rb_ary_new();
 	for (int i = 0; i < 20; i++)
 		rb_ary_push(_attr, rb_float_new(attr[i]));
 
-	return _attr;
+	VALUE output = rb_ary_new();
+	rb_ary_push(output, ret_num);
+	rb_ary_push(output, _attr);
+	return output;
 }
 
 static VALUE t_swe_lun_eclipse_when_loc(VALUE self, VALUE julian_ut, VALUE lon, VALUE lat, VALUE alt, VALUE iflag)
