@@ -897,19 +897,31 @@ void Init_swe4r()
 	rb_define_const(rb_mSwe4r, "SEFLG_SIDEREAL", INT2FIX(SEFLG_SIDEREAL));
 	rb_define_const(rb_mSwe4r, "SEFLG_ICRS", INT2FIX(SEFLG_ICRS));
 
-	rb_define_const(rb_mSwe4r, "SE_ECL_TOTAL", INT2FIX(SE_ECL_TOTAL));
 	rb_define_const(rb_mSwe4r, "SE_ECL_CENTRAL", INT2FIX(SE_ECL_CENTRAL));
 	rb_define_const(rb_mSwe4r, "SE_ECL_NONCENTRAL", INT2FIX(SE_ECL_NONCENTRAL));
+	rb_define_const(rb_mSwe4r, "SE_ECL_TOTAL", INT2FIX(SE_ECL_TOTAL));
 	rb_define_const(rb_mSwe4r, "SE_ECL_ANNULAR", INT2FIX(SE_ECL_ANNULAR));
 	rb_define_const(rb_mSwe4r, "SE_ECL_PARTIAL", INT2FIX(SE_ECL_PARTIAL));
 	rb_define_const(rb_mSwe4r, "SE_ECL_ANNULAR_TOTAL", INT2FIX(SE_ECL_ANNULAR_TOTAL));
+	rb_define_const(rb_mSwe4r, "SE_ECL_HYBRID", INT2FIX(SE_ECL_HYBRID));
+	rb_define_const(rb_mSwe4r, "SE_ECL_PENUMBRAL", INT2FIX(SE_ECL_PENUMBRAL));
+	rb_define_const(rb_mSwe4r, "SE_ECL_ALLTYPES_SOLAR", INT2FIX(SE_ECL_ALLTYPES_SOLAR));
+	rb_define_const(rb_mSwe4r, "SE_ECL_ALLTYPES_LUNAR   ", INT2FIX(SE_ECL_ALLTYPES_LUNAR));
 	rb_define_const(rb_mSwe4r, "SE_ECL_VISIBLE", INT2FIX(SE_ECL_VISIBLE));
 	rb_define_const(rb_mSwe4r, "SE_ECL_MAX_VISIBLE", INT2FIX(SE_ECL_MAX_VISIBLE));
 	rb_define_const(rb_mSwe4r, "SE_ECL_1ST_VISIBLE", INT2FIX(SE_ECL_1ST_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_PARTBEG_VISIBLE", INT2FIX(SE_ECL_PARTBEG_VISIBLE));
 	rb_define_const(rb_mSwe4r, "SE_ECL_2ND_VISIBLE", INT2FIX(SE_ECL_2ND_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_TOTBEG_VISIBLE", INT2FIX(SE_ECL_TOTBEG_VISIBLE));
 	rb_define_const(rb_mSwe4r, "SE_ECL_3RD_VISIBLE", INT2FIX(SE_ECL_3RD_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_TOTEND_VISIBLE", INT2FIX(SE_ECL_TOTEND_VISIBLE));
 	rb_define_const(rb_mSwe4r, "SE_ECL_4TH_VISIBLE", INT2FIX(SE_ECL_4TH_VISIBLE));
-	rb_define_const(rb_mSwe4r, "SE_ECL_PENUMBRAL", INT2FIX(SE_ECL_PENUMBRAL));
+	rb_define_const(rb_mSwe4r, "SE_ECL_PARTEND_VISIBLE", INT2FIX(SE_ECL_PARTEND_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_PENUMBBEG_VISIBLE", INT2FIX(SE_ECL_PENUMBBEG_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_PENUMBEND_VISIBLE", INT2FIX(SE_ECL_PENUMBEND_VISIBLE));
+	rb_define_const(rb_mSwe4r, "SE_ECL_OCC_BEG_DAYLIGHT", INT2FIX(SE_ECL_OCC_BEG_DAYLIGHT));
+	rb_define_const(rb_mSwe4r, "SE_ECL_OCC_END_DAYLIGHT", INT2FIX(SE_ECL_OCC_END_DAYLIGHT));
+	rb_define_const(rb_mSwe4r, "SE_ECL_ONE_TRY", INT2FIX(SE_ECL_ONE_TRY));
 
 	/* sidereal modes (ayanamsas) */
 	rb_define_const(rb_mSwe4r, "SE_SIDM_FAGAN_BRADLEY", INT2FIX(SE_SIDM_FAGAN_BRADLEY)); // 0
