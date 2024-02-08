@@ -906,7 +906,7 @@ void Init_swe4r()
 	rb_define_const(rb_mSwe4r, "SE_ECL_HYBRID", INT2FIX(SE_ECL_HYBRID));
 	rb_define_const(rb_mSwe4r, "SE_ECL_PENUMBRAL", INT2FIX(SE_ECL_PENUMBRAL));
 	rb_define_const(rb_mSwe4r, "SE_ECL_ALLTYPES_SOLAR", INT2FIX(SE_ECL_ALLTYPES_SOLAR));
-	rb_define_const(rb_mSwe4r, "SE_ECL_ALLTYPES_LUNAR   ", INT2FIX(SE_ECL_ALLTYPES_LUNAR));
+	rb_define_const(rb_mSwe4r, "SE_ECL_ALLTYPES_LUNAR", INT2FIX(SE_ECL_ALLTYPES_LUNAR));
 	rb_define_const(rb_mSwe4r, "SE_ECL_VISIBLE", INT2FIX(SE_ECL_VISIBLE));
 	rb_define_const(rb_mSwe4r, "SE_ECL_MAX_VISIBLE", INT2FIX(SE_ECL_MAX_VISIBLE));
 	rb_define_const(rb_mSwe4r, "SE_ECL_1ST_VISIBLE", INT2FIX(SE_ECL_1ST_VISIBLE));
