@@ -675,6 +675,35 @@ static VALUE t_swe_lun_occult_when_glob(VALUE self, VALUE julian_ut, VALUE body,
 	return output;
 }
 
+static VALUE t_swe_lun_occult_where(VALUE self, VALUE julian_ut, VALUE body, VALUE iflag)
+{
+
+	double geopos[10];
+	double attr[20];
+	char serr[AS_MAXCH];
+
+  int retval = 0;
+
+	retval = swe_lun_occult_where(NUM2DBL(julian_ut), NUM2INT(body), NULL, NUM2INT(iflag), geopos, attr, serr);
+  if (retval == ERR)
+		rb_raise(rb_eRuntimeError, serr);
+  VALUE ret_num = INT2NUM(retval);
+
+	VALUE _geopos = rb_ary_new();
+	for (int i = 0; i < 10; i++)
+		rb_ary_push(_geopos, rb_float_new(geopos[i]));
+
+	VALUE _attr = rb_ary_new();
+	for (int i = 0; i < 20; i++)
+		rb_ary_push(_attr, rb_float_new(attr[i]));
+
+	VALUE output = rb_ary_new();
+	rb_ary_push(output, ret_num);
+	rb_ary_push(output, _geopos);
+	rb_ary_push(output, _attr);
+	return output;
+}
+
 static VALUE t_swe_lun_eclipse_when_loc(VALUE self, VALUE julian_ut, VALUE lon, VALUE lat, VALUE alt, VALUE iflag)
 {
 
@@ -799,6 +828,7 @@ void Init_swe4r()
 // Lunar eclipses:
 
 	rb_define_module_function(rb_mSwe4r, "swe_lun_occult_when_glob", t_swe_lun_occult_when_glob, 4);
+	rb_define_module_function(rb_mSwe4r, "swe_lun_occult_where", t_swe_lun_occult_where, 3);
 	rb_define_module_function(rb_mSwe4r, "swe_lun_eclipse_when_loc", t_swe_lun_eclipse_when_loc, 5);
 	rb_define_module_function(rb_mSwe4r, "swe_lun_eclipse_when", t_swe_lun_eclipse_when, 3);
 	rb_define_module_function(rb_mSwe4r, "swe_lun_eclipse_how", t_swe_lun_eclipse_how, 5);

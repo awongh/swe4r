@@ -333,11 +333,16 @@ class Swe4rTest < Test::Unit::TestCase
 
   def test_swe_lun_occult_when_glob
 
-    starname = ''
     result = Swe4r::swe_lun_occult_when_glob(2444838.972916667, Swe4r::SE_SUN, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL)
 
     assert_equal(5, result[0])
     assert_equal(2445496.689880746, result[1][1])
+  end
+
+  def test_swe_lun_occult_where
+    result = Swe4r::swe_lun_occult_where(2444838.972916667, Swe4r::SE_SUN, Swe4r::SEFLG_MOSEPH)
+    assert_equal(0, result[0])
+    assert_equal(-82.72166818322415, result[1][0])
   end
 
   # swe_lun_eclipse_when_loc(tjd...) finds the next lunar eclipse for a given geographic position;
