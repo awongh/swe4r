@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'swe4r'
 
 #############################
@@ -13,17 +15,16 @@ hour = 10.15
 # Geographic Location
 longitude = -112.183333
 latitidue = 45.45
-altitude = 1468
 
 #############################
 # MAIN
 #############################
 
 # Get the Julian day number
-jd = Swe4r::swe_julday(year, month, day, hour)
+jd = Swe4r.swe_julday(year, month, day, hour)
 
 # Get house details using the Placidus house system
-houses = Swe4r::swe_houses(jd, latitidue, longitude, 'P')
+houses = Swe4r.swe_houses(jd, latitidue, longitude, 'P')
 
 # Print the house cusps
 (1..12).each do |i|

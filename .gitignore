@@ -1,6 +1,7 @@
 *.o
 *.a
 *.bundle
+*.bundle.dSYM/
 *.gem
 *.tmproj
 .DS_Store
