@@ -5,4 +5,5 @@
 *.gem
 *.tmproj
 .DS_Store
+Gemfile.lock
 ext/swe4r/Makefile

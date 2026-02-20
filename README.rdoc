@@ -10,6 +10,18 @@ Install the gem as usual:
 
   [sudo] gem install swe4r
 
+== Testing
+
+Build and install the gem locally, then run the test suite:
+
+  bundle install
+  rake install
+  rake test
+
++rake test+ is the default Rake task, so you can also just run:
+
+  rake
+
 == Methods
 The following functions of the {Swiss Ephemeris API}[http://www.astro.com/swisseph/] are supported...
 

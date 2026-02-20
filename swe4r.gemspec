@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.author            = 'David Lowenfels'
   s.email             = 'dfl@alum.mit.edu'
   s.license           = 'GPL-2.0'
-  s.required_ruby_version = '>= 3.4'
+  s.required_ruby_version = '>= 3.2.10'
   s.extra_rdoc_files  = ['README.rdoc']
   s.files             = Dir.glob('lib/**/*.{rb}') + Dir.glob('ext/**/*.{rb,h,c}')
   s.extensions        = ['ext/swe4r/extconf.rb']
