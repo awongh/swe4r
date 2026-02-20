@@ -1,0 +1,604 @@
+# Swe4r (Swiss Ephemeris 2.10.03 for Ruby)
+
+The Swe4r rubygem provides a C extension for the standard functions of the [Swiss Ephemeris API](http://www.astro.com/swisseph/).
+
+Requires Ruby >= 3.0.
+
+## Installation
+
+Install the gem as usual:
+
+```
+[sudo] gem install swe4r
+```
+
+## Methods
+
+The following functions of the [Swiss Ephemeris API](http://www.astro.com/swisseph/) are supported...
+
+### Configuration
+
+#### swe_set_ephe_path
+
+Set directory path of ephemeris files. Not required when using the Moshier Ephemeris.
+
+```
+Swe4r::swe_set_ephe_path(path) → nil
+```
+
+- **path** (`String`) — directory path where ephemeris files reside
+
+#### swe_set_jpl_file
+
+Set the JPL ephemeris file name. The file must reside in the path set by `swe_set_ephe_path`.
+
+```
+Swe4r::swe_set_jpl_file(fname) → nil
+```
+
+- **fname** (`String`) — JPL ephemeris file name (e.g. "de431.eph")
+
+#### swe_set_topo
+
+Set the geographic location for topocentric planet computation.
+
+```
+Swe4r::swe_set_topo(geolon, geolat, altitude) → nil
+```
+
+- **geolon** (`Float`) — geographic longitude in degrees (eastern positive, western negative)
+- **geolat** (`Float`) — geographic latitude in degrees (northern positive, southern negative)
+- **altitude** (`Float`) — altitude above sea level in meters
+
+#### swe_set_sid_mode
+
+Specify the mode for sidereal computations.
+
+```
+Swe4r::swe_set_sid_mode(sid_mode, t0, ayan_t0) → nil
+```
+
+- **sid_mode** (`Integer`) — sidereal mode constant (e.g. `SE_SIDM_LAHIRI`, `SE_SIDM_FAGAN_BRADLEY`, or `SE_SIDM_USER` for a custom mode)
+- **t0** (`Float`) — reference epoch as Julian day number (use 0 for predefined modes)
+- **ayan_t0** (`Float`) — initial ayanamsha at `t0` in degrees (use 0 for predefined modes)
+
+### Date and Time
+
+#### swe_julday
+
+Get the Julian day number from year, month, day, and hour.
+
+```
+Swe4r::swe_julday(year, month, day, hour [, gregflag]) → Float
+```
+
+- **year** (`Integer`) — year
+- **month** (`Integer`) — month
+- **day** (`Integer`) — day
+- **hour** (`Float`) — hour with decimal fraction
+- **gregflag** (`Integer`, optional) — `SE_GREG_CAL` (1, default) for Gregorian, `SE_JUL_CAL` (0) for Julian calendar
+- Returns (`Float`) — Julian day number
+
+#### swe_revjul
+
+Get year, month, day, and hour from a Julian day number.
+
+```
+Swe4r::swe_revjul(tjd [, gregflag]) → Array
+```
+
+- **tjd** (`Float`) — Julian day number
+- **gregflag** (`Integer`, optional) — `SE_GREG_CAL` (1, default) for Gregorian, `SE_JUL_CAL` (0) for Julian calendar
+- Returns (`Array`) — `[year, month, day, hour]` where year/month/day are `Integer` and hour is `Float`
+
+### Planet and Body Positions
+
+#### swe_calc_ut
+
+Compute positions of planets, moon, asteroids, lunar nodes, apogees, and fictitious bodies.
+
+```
+Swe4r::swe_calc_ut(tjd_ut, ipl, iflag) → Array
+```
+
+- **tjd_ut** (`Float`) — Julian day number, Universal Time
+- **ipl** (`Integer`) — body number (e.g. `SE_SUN`, `SE_MOON`, `SE_MERCURY`, etc.)
+- **iflag** (`Integer`) — bit flags for computation type (e.g. `SEFLG_MOSEPH`, `SEFLG_SPEED`, `SEFLG_TOPOCTR`, `SEFLG_SIDEREAL`)
+- Returns (`Array`) — 6 `Float` values: `[longitude, latitude, distance, speed_in_longitude, speed_in_latitude, speed_in_distance]`
+- Raises `RuntimeError` on error
+
+#### swe_get_ayanamsa_ut
+
+Compute the ayanamsha (distance of the tropical vernal point from the sidereal zero point of the zodiac).
+
+```
+Swe4r::swe_get_ayanamsa_ut(tjd_ut) → Float
+```
+
+- **tjd_ut** (`Float`) — Julian day number, Universal Time
+- Returns (`Float`) — ayanamsha value in degrees (without nutation)
+
+#### swe_get_ayanamsa_ex_ut
+
+Compute the ayanamsha using a Delta T consistent with the specified ephemeris flag.
+
+```
+Swe4r::swe_get_ayanamsa_ex_ut(tjd_ut, iflag) → Float
+```
+
+- **tjd_ut** (`Float`) — Julian day number, Universal Time
+- **iflag** (`Integer`) — ephemeris flag (e.g. `SEFLG_SWIEPH`, `SEFLG_MOSEPH`); if `SEFLG_NONUT` is set, ayanamsha is computed without nutation
+- Returns (`Float`) — ayanamsha value in degrees
+- Raises `RuntimeError` on error
+
+#### swe_pheno_ut
+
+Compute planetary phenomena: phase angle, phase, elongation, apparent diameter, and apparent magnitude.
+
+```
+Swe4r::swe_pheno_ut(tjd_ut, ipl, iflag) → Array
+```
+
+- **tjd_ut** (`Float`) — Julian day number, Universal Time
+- **ipl** (`Integer`) — planet number (e.g. `SE_SUN`, `SE_MOON`, etc.)
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Array`) — 20 `Float` values; the first 5 are:
+  - `[0]` phase angle (Earth-planet-Sun)
+  - `[1]` phase (illuminated fraction of disc)
+  - `[2]` elongation of planet
+  - `[3]` apparent diameter of disc
+  - `[4]` apparent magnitude
+- Raises `RuntimeError` on error
+
+### Houses
+
+#### swe_houses
+
+Compute house cusps, ascendant, midheaven, and other angles.
+
+```
+Swe4r::swe_houses(tjd_ut, geolat, geolon, hsys) → Array
+```
+
+- **tjd_ut** (`Float`) — Julian day number, Universal Time
+- **geolat** (`Float`) — geographic latitude in degrees
+- **geolon** (`Float`) — geographic longitude in degrees
+- **hsys** (`String` or `Integer`) — house system as a single character (e.g. `'P'`=Placidus, `'K'`=Koch, `'O'`=Porphyrius, `'R'`=Regiomontanus, `'C'`=Campanus, `'A'` or `'E'`=Equal, `'V'`=Vehlow, `'W'`=Whole sign, `'X'`=Axial rotation, `'H'`=Horizontal, `'T'`=Polich/Page, `'B'`=Alcabitus, `'M'`=Morinus, `'U'`=Krusinski-Pisa, `'G'`=Gauquelin sectors)
+- Returns (`Array`) — `[cusps, ascmc]` where:
+  - `cusps` is an `Array` of 13 `Float` values (index 1–12 = house cusps 1–12)
+  - `ascmc` is an `Array` of 10 `Float` values (index 0=Ascendant, 1=MC, 2=ARMC, 3=Equatorial Ascendant, 4=Co-Ascendant Koch, 5=Co-Ascendant Munkasey, 6=Polar Ascendant Munkasey)
+- Raises `RuntimeError` on error
+
+#### swe_houses_ex2
+
+Extended house calculation returning cusps, angles, and their speeds.
+
+```
+Swe4r::swe_houses_ex2(tjd_ut, iflag, geolat, geolon, hsys) → Array
+```
+
+- **tjd_ut** (`Float`) — Julian day number, Universal Time
+- **iflag** (`Integer`) — 0 or `SEFLG_SIDEREAL` or `SEFLG_RADIANS` or `SEFLG_NONUT`
+- **geolat** (`Float`) — geographic latitude in degrees
+- **geolon** (`Float`) — geographic longitude in degrees
+- **hsys** (`String` or `Integer`) — house system character (see `swe_houses`)
+- Returns (`Array`) — `[cusps, ascmc, cusps_speed, ascmc_speed]` where:
+  - `cusps` is an `Array` of 13 `Float` values (house cusps)
+  - `ascmc` is an `Array` of 10 `Float` values (angles)
+  - `cusps_speed` is an `Array` of 13 `Float` values (daily motion of house cusps)
+  - `ascmc_speed` is an `Array` of 10 `Float` values (daily motion of angles)
+- Raises `RuntimeError` on error
+
+#### swe_house_pos
+
+Compute the house position of a given body for a given ARMC.
+
+```
+Swe4r::swe_house_pos(armc, geolat, eps, hsys, eclon, eclat) → Float
+```
+
+- **armc** (`Float`) — ARMC in degrees
+- **geolat** (`Float`) — geographic latitude in degrees
+- **eps** (`Float`) — ecliptic obliquity in degrees
+- **hsys** (`Integer`) — house method character as ASCII code
+- **eclon** (`Float`) — ecliptic longitude of the body in degrees
+- **eclat** (`Float`) — ecliptic latitude of the body in degrees
+- Returns (`Float`) — house position (1.0 to 12.999999, or 1.0 to 36.999999 for Gauquelin sectors)
+- Raises `RuntimeError` on error
+
+### Coordinate Transformation
+
+#### swe_azalt
+
+Compute horizontal coordinates (azimuth and altitude) from ecliptical or equatorial coordinates.
+
+```
+Swe4r::swe_azalt(tjd_ut, calc_flag, geolon, geolat, height, atpress, attemp, xin0, xin1, xin2) → Array
+```
+
+- **tjd_ut** (`Float`) — Julian day number, Universal Time
+- **calc_flag** (`Integer`) — `SE_ECL2HOR` (0) to convert from ecliptic, or `SE_EQU2HOR` (1) to convert from equatorial
+- **geolon** (`Float`) — geographic longitude in degrees
+- **geolat** (`Float`) — geographic latitude in degrees
+- **height** (`Float`) — altitude above sea level in meters
+- **atpress** (`Float`) — atmospheric pressure in mbar/hPa (0 to estimate from altitude)
+- **attemp** (`Float`) — atmospheric temperature in degrees Celsius
+- **xin0** (`Float`) — ecliptic longitude or right ascension (depending on `calc_flag`)
+- **xin1** (`Float`) — ecliptic latitude or declination (depending on `calc_flag`)
+- **xin2** (`Float`) — distance (not required, can be 0)
+- Returns (`Array`) — 3 `Float` values: `[azimuth, true_altitude, apparent_altitude]` (azimuth measured from south point to west, altitudes in degrees)
+
+#### swe_cotrans
+
+Coordinate transformation from ecliptic to equator or vice-versa.
+
+```
+Swe4r::swe_cotrans(eps, lon, lat [, dist]) → Array
+```
+
+- **eps** (`Float`) — obliquity of ecliptic in degrees; positive for equator→ecliptic, negative for ecliptic→equator
+- **lon** (`Float`) — longitude in degrees
+- **lat** (`Float`) — latitude in degrees
+- **dist** (`Float`, optional) — distance (unchanged by the conversion; defaults to 1.0)
+- Returns (`Array`) — `[longitude, latitude]` or `[longitude, latitude, distance]` (if `dist` was provided), all `Float`
+
+### Risings, Settings, and Meridian Transits
+
+#### swe_rise_trans
+
+Compute rising, setting, and meridian transit times for planets and stars.
+
+```
+Swe4r::swe_rise_trans(tjd_ut, body, epheflag, rsmi, geolon, geolat, height, atpress, attemp) → Float
+```
+
+- **tjd_ut** (`Float`) — search after this time (Julian day, UT)
+- **body** (`Integer` or `String`) — planet number (e.g. `SE_SUN`) or star name as `String`
+- **epheflag** (`Integer`) — ephemeris flag
+- **rsmi** (`Integer`) — event type: `SE_CALC_RISE`, `SE_CALC_SET`, `SE_CALC_MTRANSIT`, or `SE_CALC_ITRANSIT` (combinable with `SE_BIT_DISC_CENTER`, `SE_BIT_NO_REFRACTION`, etc.)
+- **geolon** (`Float`) — geographic longitude in degrees
+- **geolat** (`Float`) — geographic latitude in degrees
+- **height** (`Float`) — altitude above sea level in meters
+- **atpress** (`Float`) — atmospheric pressure in mbar/hPa
+- **attemp** (`Float`) — atmospheric temperature in degrees Celsius
+- Returns (`Float`) — Julian day number (UT) of the event
+- Raises `RuntimeError` on error
+
+#### swe_rise_trans_true_hor
+
+Like `swe_rise_trans`, but for a local horizon with altitude != 0.
+
+```
+Swe4r::swe_rise_trans_true_hor(tjd_ut, body, epheflag, rsmi, geolon, geolat, height, atpress, attemp, horhgt) → Float
+```
+
+- **tjd_ut** (`Float`) — search after this time (Julian day, UT)
+- **body** (`Integer` or `String`) — planet number or star name
+- **epheflag** (`Integer`) — ephemeris flag
+- **rsmi** (`Integer`) — event type (see `swe_rise_trans`)
+- **geolon** (`Float`) — geographic longitude in degrees
+- **geolat** (`Float`) — geographic latitude in degrees
+- **height** (`Float`) — altitude above sea level in meters
+- **atpress** (`Float`) — atmospheric pressure in mbar/hPa
+- **attemp** (`Float`) — atmospheric temperature in degrees Celsius
+- **horhgt** (`Float`) — height of local horizon in degrees at the point where the body rises or sets
+- Returns (`Float`) — Julian day number (UT) of the event
+- Raises `RuntimeError` on error
+
+### Crossings
+
+#### swe_solcross
+
+Find the next crossing of the Sun over a given ecliptic position (Ephemeris Time).
+
+```
+Swe4r::swe_solcross(x2cross, tjd_et, iflag) → Float
+```
+
+- **x2cross** (`Float`) — ecliptic longitude to cross in degrees
+- **tjd_et** (`Float`) — start date for search (Julian day, ET)
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Float`) — Julian day number (ET) of the next crossing
+- Raises `RuntimeError` on error
+
+#### swe_solcross_ut
+
+Find the next crossing of the Sun over a given ecliptic position (Universal Time).
+
+```
+Swe4r::swe_solcross_ut(x2cross, tjd_ut, iflag) → Float
+```
+
+- **x2cross** (`Float`) — ecliptic longitude to cross in degrees
+- **tjd_ut** (`Float`) — start date for search (Julian day, UT)
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Float`) — Julian day number (UT) of the next crossing
+- Raises `RuntimeError` on error
+
+#### swe_mooncross
+
+Find the next crossing of the Moon over a given ecliptic position (Ephemeris Time).
+
+```
+Swe4r::swe_mooncross(x2cross, tjd_et, iflag) → Float
+```
+
+- **x2cross** (`Float`) — ecliptic longitude to cross in degrees
+- **tjd_et** (`Float`) — start date for search (Julian day, ET)
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Float`) — Julian day number (ET) of the next crossing
+- Raises `RuntimeError` on error
+
+#### swe_mooncross_ut
+
+Find the next crossing of the Moon over a given ecliptic position (Universal Time).
+
+```
+Swe4r::swe_mooncross_ut(x2cross, tjd_ut, iflag) → Float
+```
+
+- **x2cross** (`Float`) — ecliptic longitude to cross in degrees
+- **tjd_ut** (`Float`) — start date for search (Julian day, UT)
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Float`) — Julian day number (UT) of the next crossing
+- Raises `RuntimeError` on error
+
+### Solar Eclipses
+
+#### swe_sol_eclipse_when_loc
+
+Find the next solar eclipse for a given geographic position.
+
+```
+Swe4r::swe_sol_eclipse_when_loc(tjd_ut, geolon, geolat, altitude, iflag) → Array
+```
+
+- **tjd_ut** (`Float`) — start date for search (Julian day, UT)
+- **geolon** (`Float`) — geographic longitude in degrees
+- **geolat** (`Float`) — geographic latitude in degrees
+- **altitude** (`Float`) — altitude above sea level in meters
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Array`) — `[retflag, tret, attr]` where:
+  - `retflag` (`Integer`) — eclipse type flag (e.g. `SE_ECL_TOTAL`, `SE_ECL_ANNULAR`, `SE_ECL_PARTIAL`)
+  - `tret` (`Array`) — 10 `Float` values (eclipse time data)
+  - `attr` (`Array`) — 20 `Float` values (eclipse attributes)
+- Raises `RuntimeError` on error
+
+#### swe_sol_eclipse_when_glob
+
+Find the next solar eclipse globally.
+
+```
+Swe4r::swe_sol_eclipse_when_glob(tjd_ut, iflag, ifltype) → Array
+```
+
+- **tjd_ut** (`Float`) — start date for search (Julian day, UT)
+- **iflag** (`Integer`) — ephemeris flag
+- **ifltype** (`Integer`) — eclipse type wanted (e.g. `SE_ECL_TOTAL`, `SE_ECL_ANNULAR`, etc.) or 0 for any type
+- Returns (`Array`) — `[retflag, tret]` where:
+  - `retflag` (`Integer`) — eclipse type flag
+  - `tret` (`Array`) — 10 `Float` values (eclipse time data)
+- Raises `RuntimeError` on error
+
+#### swe_sol_eclipse_where
+
+Compute the geographic location of a solar eclipse for a given time.
+
+```
+Swe4r::swe_sol_eclipse_where(tjd_ut, iflag) → Array
+```
+
+- **tjd_ut** (`Float`) — time (Julian day, UT)
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Array`) — `[retflag, geopos, attr]` where:
+  - `retflag` (`Integer`) — eclipse type flag (0 if no eclipse)
+  - `geopos` (`Array`) — 2 `Float` values: `[longitude, latitude]` of central eclipse
+  - `attr` (`Array`) — 20 `Float` values (eclipse attributes)
+- Raises `RuntimeError` on error
+
+#### swe_sol_eclipse_how
+
+Compute attributes of a solar eclipse for a given time and location.
+
+```
+Swe4r::swe_sol_eclipse_how(tjd_ut, geolon, geolat, altitude, iflag) → Array
+```
+
+- **tjd_ut** (`Float`) — time (Julian day, UT)
+- **geolon** (`Float`) — geographic longitude in degrees
+- **geolat** (`Float`) — geographic latitude in degrees
+- **altitude** (`Float`) — altitude above sea level in meters
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Array`) — `[retflag, attr]` where:
+  - `retflag` (`Integer`) — eclipse type flag (0 if no eclipse visible)
+  - `attr` (`Array`) — 20 `Float` values (eclipse attributes)
+- Raises `RuntimeError` on error
+
+### Lunar Eclipses
+
+#### swe_lun_eclipse_when_loc
+
+Find the next lunar eclipse for a given geographic position.
+
+```
+Swe4r::swe_lun_eclipse_when_loc(tjd_ut, geolon, geolat, altitude, iflag) → Array
+```
+
+- **tjd_ut** (`Float`) — start date for search (Julian day, UT)
+- **geolon** (`Float`) — geographic longitude in degrees
+- **geolat** (`Float`) — geographic latitude in degrees
+- **altitude** (`Float`) — altitude above sea level in meters
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Array`) — `[retflag, tret, attr]` where:
+  - `retflag` (`Integer`) — eclipse type flag (e.g. `SE_ECL_TOTAL`, `SE_ECL_PENUMBRAL`, `SE_ECL_PARTIAL`)
+  - `tret` (`Array`) — 10 `Float` values (eclipse time data)
+  - `attr` (`Array`) — 20 `Float` values (eclipse attributes)
+- Raises `RuntimeError` on error
+
+#### swe_lun_eclipse_when
+
+Find the next lunar eclipse globally.
+
+```
+Swe4r::swe_lun_eclipse_when(tjd_ut, iflag, ifltype) → Array
+```
+
+- **tjd_ut** (`Float`) — start date for search (Julian day, UT)
+- **iflag** (`Integer`) — ephemeris flag
+- **ifltype** (`Integer`) — eclipse type wanted (e.g. `SE_ECL_TOTAL`, etc.) or 0 for any type
+- Returns (`Array`) — `[retflag, tret]` where:
+  - `retflag` (`Integer`) — eclipse type flag
+  - `tret` (`Array`) — 10 `Float` values (eclipse time data)
+- Raises `RuntimeError` on error
+
+#### swe_lun_eclipse_how
+
+Compute attributes of a lunar eclipse for a given time and location.
+
+```
+Swe4r::swe_lun_eclipse_how(tjd_ut, geolon, geolat, altitude, iflag) → Array
+```
+
+- **tjd_ut** (`Float`) — time (Julian day, UT)
+- **geolon** (`Float`) — geographic longitude in degrees
+- **geolat** (`Float`) — geographic latitude in degrees
+- **altitude** (`Float`) — altitude above sea level in meters
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Array`) — `[retflag, attr]` where:
+  - `retflag` (`Integer`) — eclipse type flag (0 if no eclipse)
+  - `attr` (`Array`) — 20 `Float` values (eclipse attributes)
+- Raises `RuntimeError` on error
+
+### Occultations
+
+#### swe_lun_occult_when_glob
+
+Find the next occultation of a given body globally.
+
+```
+Swe4r::swe_lun_occult_when_glob(tjd_ut, ipl, iflag, ifltype) → Array
+```
+
+- **tjd_ut** (`Float`) — start date for search (Julian day, UT)
+- **ipl** (`Integer`) — planet number
+- **iflag** (`Integer`) — ephemeris flag
+- **ifltype** (`Integer`) — eclipse/occultation type wanted or 0 for any type
+- Returns (`Array`) — `[retflag, tret]` where:
+  - `retflag` (`Integer`) — occultation type flag
+  - `tret` (`Array`) — 10 `Float` values (event time data)
+- Raises `RuntimeError` on error
+
+#### swe_lun_occult_where
+
+Compute the geographic location of an occultation for a given time.
+
+```
+Swe4r::swe_lun_occult_where(tjd_ut, ipl, iflag) → Array
+```
+
+- **tjd_ut** (`Float`) — time (Julian day, UT)
+- **ipl** (`Integer`) — planet number
+- **iflag** (`Integer`) — ephemeris flag
+- Returns (`Array`) — `[retflag, geopos, attr]` where:
+  - `retflag` (`Integer`) — occultation type flag (0 if no occultation)
+  - `geopos` (`Array`) — 10 `Float` values (geographic position data)
+  - `attr` (`Array`) — 20 `Float` values (occultation attributes)
+- Raises `RuntimeError` on error
+
+## Examples
+
+The following example demonstrates how to calculate the position of a celestial body such as a planet using the `swe_calc_ut` function:
+
+```ruby
+require 'swe4r'
+
+# Date Information
+year = 2012
+month = 5
+day = 14
+hour = 10.15
+
+# Geographic Location
+longitude = -112.183333
+latitidue = 45.45
+altitude = 1468
+
+# Get the Julian day number
+jd = Swe4r::swe_julday(year, month, day, hour)
+
+# Set the geographic location for topocentric positions
+Swe4r::swe_set_topo(longitude, latitidue, altitude)
+
+# Set the sidereal mode for sidereal positions
+Swe4r::swe_set_sid_mode(Swe4r::SE_SIDM_LAHIRI, 0, 0)
+
+# Get the ayanamsha (the distance of the tropical vernal point from the sidereal zero point of the zodiac)
+ayanamsha = Swe4r::swe_get_ayanamsa_ut(jd)
+
+# Calculate the position of the Sun
+# Use the Moshier Ephemeris (does not require ephemeris files)
+# Get high precision speed and sidereal/topocentric positions
+body = Swe4r::swe_calc_ut(jd, Swe4r::SE_SUN, Swe4r::SEFLG_MOSEPH|Swe4r::SEFLG_SPEED|Swe4r::SEFLG_TOPOCTR|Swe4r::SEFLG_SIDEREAL)
+
+# Print the results
+puts "Longitude: #{body[0]}"
+puts "Latitude: #{body[1]}"
+puts "Distance in AU: #{body[2]}"
+puts "Speed in longitude (deg/day): #{body[3]}"
+puts "Speed in latitude (deg/day): #{body[4]}"
+puts "Speed in distance (AU/day): #{body[5]}"
+puts "Ayanamsha: #{ayanamsha}"
+```
+
+The following example demonstrates how to calculate house cusps, the ascendant, midheaven, and other points on the zodiac using the `swe_houses` function:
+
+```ruby
+require 'swe4r'
+
+
+# Date Information
+year = 2012
+month = 5
+day = 14
+hour = 10.15
+
+# Geographic Location
+longitude = -112.183333
+latitidue = 45.45
+altitude = 1468
+
+# Get the Julian day number
+jd = Swe4r::swe_julday(year, month, day, hour)
+
+# Get house details using the Placidus house system
+houses = Swe4r::swe_houses(jd, latitidue, longitude, 'P')
+
+# Print the house cusps
+(1..12).each do |i|
+  puts "House ##{i} Cusp: #{houses[i]}"
+end
+
+# Print ascendant, midheaven, etc
+puts "Ascendant: #{houses[13]}"
+puts "Midheaven (MC): #{houses[14]}"
+puts "ARMC: #{houses[15]}"
+puts "Equatorial Ascendant: #{houses[16]}"
+puts "Co-Ascendant (Walter Koch): #{houses[17]}"
+puts "Co-Ascendant (Michael Munkasey): #{houses[18]}"
+puts "Polar Ascendant (M. Munkasey) : #{houses[19]}"
+```
+
+## License
+
+Swe4r is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Swe4r is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Swe4r. If not, see [http://www.gnu.org/licenses/](http://www.gnu.org/licenses/).

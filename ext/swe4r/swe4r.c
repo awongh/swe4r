@@ -27,6 +27,14 @@ along with Swe4r.  If not, see <http://www.gnu.org/licenses/>.
 // Module Name
 VALUE rb_mSwe4r = Qnil;
 
+static char value_to_char(VALUE v) {
+	if (RB_TYPE_P(v, T_STRING)) {
+		return RSTRING_PTR(v)[0];
+	} else {
+		return (char)NUM2INT(v);
+	}
+}
+
 /*
  * Set directory path of ephemeris files
  * http://www.astro.com/swisseph/swephprg.htm#_Toc283735481
@@ -137,7 +145,7 @@ static VALUE t_swe_calc_ut(VALUE self, VALUE julian_ut, VALUE body, VALUE iflag)
 	char serr[AS_MAXCH];
 
 	if (swe_calc_ut(NUM2DBL(julian_ut), NUM2INT(body), NUM2LONG(iflag), results, serr) < 0)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
 
 	VALUE output = rb_ary_new();
 	for (int i = 0; i < 6; i++)
@@ -198,7 +206,7 @@ static VALUE t_swe_get_ayanamsa_ex_ut(VALUE self, VALUE julian_ut, VALUE flag )
 	// }
 
 	if (swe_get_ayanamsa_ex_ut(NUM2DBL(julian_ut), NUM2INT(flag), &ayanamsha, serr) < 0)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
 
 	return rb_float_new(ayanamsha);
 }
@@ -239,8 +247,8 @@ static VALUE t_swe_houses(VALUE self, VALUE julian_day, VALUE latitude, VALUE lo
 	double ascmc[10];
 	char serr[AS_MAXCH];
 
-	if (swe_houses(NUM2DBL(julian_day), NUM2DBL(latitude), NUM2DBL(longitude), NUM2CHR(house_system), cusps, ascmc) < 0)
-		rb_raise(rb_eRuntimeError, serr);
+	if (swe_houses(NUM2DBL(julian_day), NUM2DBL(latitude), NUM2DBL(longitude), value_to_char(house_system), cusps, ascmc) < 0)
+		rb_raise(rb_eRuntimeError, "%s", serr);
 
 	VALUE _cusps = rb_ary_new();
 	for (int i = 0; i < 13; i++)
@@ -283,8 +291,8 @@ static VALUE t_swe_houses_ex2(VALUE self, VALUE julian_day, VALUE flag, VALUE la
 	double ascmc_speed[10];
 	char serr[AS_MAXCH];
 
-	if (swe_houses_ex2(NUM2DBL(julian_day), NUM2INT(flag), NUM2DBL(latitude), NUM2DBL(longitude), NUM2CHR(house_system), cusps, ascmc, cusps_speed, ascmc_speed, serr) < 0)
-		rb_raise(rb_eRuntimeError, serr);
+	if (swe_houses_ex2(NUM2DBL(julian_day), NUM2INT(flag), NUM2DBL(latitude), NUM2DBL(longitude), value_to_char(house_system), cusps, ascmc, cusps_speed, ascmc_speed, serr) < 0)
+		rb_raise(rb_eRuntimeError, "%s", serr);
 
 
 	VALUE _cusps = rb_ary_new();
@@ -332,7 +340,7 @@ static VALUE t_swe_rise_trans(VALUE self, VALUE julian_day, VALUE body, VALUE fl
 	geopos[2] = NUM2DBL(height);
 	int ipl;
 	char *starname;
-	if( TYPE(body) == T_STRING ) {
+	if( RB_TYPE_P(body, T_STRING) ) {
 		starname = StringValuePtr(body);
 		ipl = 0;
 	} else {
@@ -343,7 +351,7 @@ static VALUE t_swe_rise_trans(VALUE self, VALUE julian_day, VALUE body, VALUE fl
 	double retval;
 
 	if (swe_rise_trans(NUM2DBL(julian_day), ipl, starname, NUM2INT(flag), NUM2INT(rmsi), geopos, NUM2DBL(pressure), NUM2DBL(temp), &retval, serr) < 0)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
 	return rb_float_new(retval);
 }
 
@@ -369,7 +377,7 @@ static VALUE t_swe_rise_trans_true_hor(VALUE self, VALUE julian_day, VALUE body,
 	geopos[2] = NUM2DBL(height);
 	int ipl;
 	char *starname;
-	if( TYPE(body) == T_STRING ) {
+	if( RB_TYPE_P(body, T_STRING) ) {
 		starname = StringValuePtr(body);
 		ipl = 0;
 	} else {
@@ -380,7 +388,7 @@ static VALUE t_swe_rise_trans_true_hor(VALUE self, VALUE julian_day, VALUE body,
 	double retval;
 
 	if (swe_rise_trans_true_hor(NUM2DBL(julian_day), ipl, starname, NUM2INT(flag), NUM2INT(rmsi), geopos, NUM2DBL(pressure), NUM2DBL(temp), NUM2DBL(hor_height), &retval, serr) < 0)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
 	return rb_float_new(retval);
 }
 
@@ -444,7 +452,7 @@ static VALUE t_swe_cotrans(int argc, VALUE *argv, VALUE self) {
 	double xpo[3];
 	xpo[0] = NUM2DBL(argv[1]);  // NUM2DBL(lon);
 	xpo[1] = NUM2DBL(argv[2]);  // NUM2DBL(lat);
-	xpo[2] = NUM2DBL((argc == 4) ? argv[3] : 1.0);
+	xpo[2] = (argc == 4) ? NUM2DBL(argv[3]) : 1.0;
 
 	double xpn[3];
 
@@ -474,7 +482,7 @@ static VALUE t_swe_house_pos( VALUE self, VALUE armc, VALUE geolat, VALUE eps, V
 
 	double retval = swe_house_pos(NUM2DBL(armc), NUM2DBL(geolat), NUM2DBL(eps), NUM2INT(hsys), eclpos, serr);
 	if (retval < 0)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
 
 	VALUE output = rb_float_new(retval);
 	return output;
@@ -486,7 +494,7 @@ static VALUE t_swe_solcross( VALUE self, VALUE x2cross, VALUE tjd_et, VALUE ifla
 
 	double retval = swe_solcross(NUM2DBL(x2cross), NUM2DBL(tjd_et), NUM2INT(iflag), serr);
 	if (retval < tjd_et)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
 	return rb_float_new(retval);
 }
 
@@ -496,7 +504,7 @@ static VALUE t_swe_solcross_ut( VALUE self, VALUE x2cross, VALUE tjd_ut, VALUE i
 
 	double retval = swe_solcross_ut(NUM2DBL(x2cross), NUM2DBL(tjd_ut), NUM2INT(iflag), serr);
 	if (retval < tjd_ut)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
 	return rb_float_new(retval);
 }
 
@@ -506,7 +514,7 @@ static VALUE t_swe_mooncross( VALUE self, VALUE x2cross, VALUE tjd_et, VALUE ifl
 
 	double retval = swe_mooncross(NUM2DBL(x2cross), NUM2DBL(tjd_et), NUM2INT(iflag), serr);
 	if (retval < tjd_et)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
 	return rb_float_new(retval);
 }
 
@@ -516,7 +524,7 @@ static VALUE t_swe_mooncross_ut( VALUE self, VALUE x2cross, VALUE tjd_ut, VALUE 
 
 	double retval = swe_mooncross_ut(NUM2DBL(x2cross), NUM2DBL(tjd_ut), NUM2INT(iflag), serr);
 	if (retval < tjd_ut)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
 	return rb_float_new(retval);
 }
 
@@ -529,7 +537,7 @@ static VALUE t_swe_pheno_ut(VALUE self, VALUE julian_ut, VALUE body, VALUE iflag
 	char serr[AS_MAXCH];
 
 	if (swe_pheno_ut(NUM2DBL(julian_ut), NUM2INT(body), NUM2LONG(iflag), results, serr) < 0)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
 
 	VALUE output = rb_ary_new();
 	for (int i = 0; i < 20; i++)
@@ -553,7 +561,7 @@ static VALUE t_swe_sol_eclipse_when_loc(VALUE self, VALUE julian_ut, VALUE lon, 
   int retval = 0;
 	retval = swe_sol_eclipse_when_loc(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, tret, attr, backward, serr);
   if (retval == ERR)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
   VALUE ret_num = INT2NUM(retval);
 
 
@@ -582,7 +590,7 @@ static VALUE t_swe_sol_eclipse_when_glob(VALUE self, VALUE julian_ut, VALUE ifla
   int retval = 0;
 	retval = swe_sol_eclipse_when_glob(NUM2DBL(julian_ut), NUM2INT(iflag), NUM2INT(ifltype), tret, backward, serr);
   if (retval == ERR)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
   VALUE ret_num = INT2NUM(retval);
 
 	VALUE _tret = rb_ary_new();
@@ -606,7 +614,7 @@ static VALUE t_swe_sol_eclipse_where(VALUE self, VALUE julian_ut, VALUE iflag)
   int retval = 0;
 	retval = swe_sol_eclipse_where(NUM2DBL(julian_ut), NUM2INT(iflag), geopos_res, attr, serr);
   if (retval == ERR)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
   VALUE ret_num = INT2NUM(retval);
 
   // geopos results
@@ -638,7 +646,7 @@ static VALUE t_swe_sol_eclipse_how(VALUE self, VALUE julian_ut, VALUE lon, VALUE
   int retval = 0;
 	retval = swe_sol_eclipse_how(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, attr, serr);
   if (retval == ERR)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
   VALUE ret_num = INT2NUM(retval);
 
 	VALUE _attr = rb_ary_new();
@@ -662,7 +670,7 @@ static VALUE t_swe_lun_occult_when_glob(VALUE self, VALUE julian_ut, VALUE body,
 
 	retval = swe_lun_occult_when_glob(NUM2DBL(julian_ut), NUM2INT(body), NULL, NUM2INT(iflag), NUM2INT(ifltype), tret, backward, serr);
   if (retval == ERR)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
   VALUE ret_num = INT2NUM(retval);
 
 	VALUE _tret = rb_ary_new();
@@ -686,7 +694,7 @@ static VALUE t_swe_lun_occult_where(VALUE self, VALUE julian_ut, VALUE body, VAL
 
 	retval = swe_lun_occult_where(NUM2DBL(julian_ut), NUM2INT(body), NULL, NUM2INT(iflag), geopos, attr, serr);
   if (retval == ERR)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
   VALUE ret_num = INT2NUM(retval);
 
 	VALUE _geopos = rb_ary_new();
@@ -719,7 +727,7 @@ static VALUE t_swe_lun_eclipse_when_loc(VALUE self, VALUE julian_ut, VALUE lon, 
   int retval = 0;
 	retval = swe_lun_eclipse_when_loc(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, tret, attr, backward, serr);
   if (retval == ERR)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
   VALUE ret_num = INT2NUM(retval);
 
 	VALUE _tret = rb_ary_new();
@@ -748,7 +756,7 @@ static VALUE t_swe_lun_eclipse_when(VALUE self, VALUE julian_ut, VALUE iflag, VA
 	retval = swe_lun_eclipse_when(NUM2DBL(julian_ut), NUM2INT(iflag), NUM2INT(ifltype), tret, backward, serr);
 
   if (retval == ERR)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
   VALUE ret_num = INT2NUM(retval);
 
 	VALUE _tret = rb_ary_new();
@@ -775,7 +783,7 @@ static VALUE t_swe_lun_eclipse_how(VALUE self, VALUE julian_ut, VALUE lon, VALUE
 	retval = swe_lun_eclipse_how(NUM2DBL(julian_ut), NUM2INT(iflag), geopos, attr, serr);
 
   if (retval == ERR)
-		rb_raise(rb_eRuntimeError, serr);
+		rb_raise(rb_eRuntimeError, "%s", serr);
   VALUE ret_num = INT2NUM(retval);
 
 	VALUE _attr = rb_ary_new();
