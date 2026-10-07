@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name              = 'swe4r'
-  s.version           = '1.1.7'
+  s.version           = '1.2.0'
   s.summary           = 'Swiss Ephemeris for Ruby'
   s.description       = 'A C extension for the Swiss Ephemeris library (http://www.astro.com/swisseph/)'
   s.homepage          = 'https://github.com/dfl/swe4r'

@@ -6,6 +6,20 @@ require 'swe4r'
 
 class Swe4rTest < Test::Unit::TestCase
   DELTA = 1e-8
+  # Tolerance vs published Espenak/NASA greatest-eclipse times (Moshier ephemeris).
+  ECLIPSE_DELTA = 10.0 / 86_400
+
+  # Total solar eclipse of 1999 Aug 11 — greatest eclipse 11:03:05.4 UT1, JD 2451401.960479
+  # Source: https://eclipsewise.com/solar/SEprime/1901-2000/SE1999Aug11Tprime.html
+  SOL_ECL_1999_AUG_11_JD = 2_451_401.960479
+
+  # Total solar eclipse of 2017 Aug 21 — greatest eclipse 18:25:31.5 UT1, JD 2457987.267726
+  # Source: https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2017Aug21Tprime.html
+  SOL_ECL_2017_AUG_21_JD = 2_457_987.267726
+
+  # Total lunar eclipse of 2018 Jul 27 — greatest eclipse 20:21:43.5 UT
+  # Source: https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2018Jul27T.pdf
+  LUN_ECL_2018_JUL_27_JD = Swe4r.swe_julday(2018, 7, 27, 20 + (21 / 60.0) + (43.5 / 3600.0))
 
   def assert_array_in_delta(expected, actual, delta = DELTA)
     assert_equal(expected.size, actual.size, 'Array size mismatch')
@@ -229,7 +243,7 @@ class Swe4rTest < Test::Unit::TestCase
 
   # swe_sol_eclipse_when_loc(tjd...) finds the next eclipse for a given geographic position;
   def test_swe_sol_eclipse_when_loc
-    res = Swe4r.swe_sol_eclipse_when_loc(2_444_838.972916667, 45.45, -112.183333, 0, Swe4r::SEFLG_MOSEPH)
+    res = Swe4r.swe_sol_eclipse_when_loc(2_444_838.972916667, 45.45, -112.183333, 0, Swe4r::SEFLG_MOSEPH, false)
     res[1][1]
     # assert_equal(expect_max_ecl_time, max_ecl_time)
 
@@ -262,7 +276,7 @@ class Swe4rTest < Test::Unit::TestCase
 
   # swe_sol_eclipse_when_glob(tjd...) finds the next eclipse globally;
   def test_swe_sol_eclipse_when_glob
-    result = Swe4r.swe_sol_eclipse_when_glob(2_444_838.972916667, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL)
+    result = Swe4r.swe_sol_eclipse_when_glob(2_444_838.972916667, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL, false)
     # assert_equal(test_data, result)
 
     eclipse_type = result[0]
@@ -281,6 +295,44 @@ class Swe4rTest < Test::Unit::TestCase
     ]
 
     assert_equal(expected_type_results, type_results)
+  end
+
+  def test_swe_sol_eclipse_when_glob_known_1999
+    # Search forward from 1999 Aug 1 for the Europe/Asia total solar eclipse.
+    tjd_start = Swe4r.swe_julday(1999, 8, 1, 0)
+    result = Swe4r.swe_sol_eclipse_when_glob(tjd_start, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL, false)
+
+    assert result[0].allbits?(Swe4r::SE_ECL_TOTAL)
+    assert_in_delta(SOL_ECL_1999_AUG_11_JD, result[1][0], ECLIPSE_DELTA)
+  end
+
+  def test_swe_sol_eclipse_when_glob_known_2017_forward
+    tjd_start = Swe4r.swe_julday(2017, 8, 1, 0)
+    result = Swe4r.swe_sol_eclipse_when_glob(tjd_start, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL, false)
+
+    assert result[0].allbits?(Swe4r::SE_ECL_TOTAL)
+    assert_in_delta(SOL_ECL_2017_AUG_21_JD, result[1][0], ECLIPSE_DELTA)
+  end
+
+  def test_swe_sol_eclipse_when_glob_known_2017_backward
+    # Search backward from after the eclipse; should find 2017 Aug 21.
+    tjd_start = Swe4r.swe_julday(2017, 9, 1, 0)
+    result = Swe4r.swe_sol_eclipse_when_glob(tjd_start, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL, true)
+
+    assert result[0].allbits?(Swe4r::SE_ECL_TOTAL)
+    assert_operator result[1][0], :<, tjd_start
+    assert_in_delta(SOL_ECL_2017_AUG_21_JD, result[1][0], ECLIPSE_DELTA)
+  end
+
+  def test_swe_sol_eclipse_when_loc_known_2017
+    # Casper, WY was on the path of totality for the 2017 Aug 21 eclipse.
+    tjd_start = Swe4r.swe_julday(2017, 8, 1, 0)
+    result = Swe4r.swe_sol_eclipse_when_loc(tjd_start, -106.3, 42.85, 0, Swe4r::SEFLG_MOSEPH, false)
+
+    assert result[0].allbits?(Swe4r::SE_ECL_TOTAL)
+    assert result[0].allbits?(Swe4r::SE_ECL_VISIBLE)
+    y, m, d, = Swe4r.swe_revjul(result[1][0])
+    assert_equal [2017, 8, 21], [y, m, d]
   end
 
   # swe_sol_eclipse_where() computes the geographic location of a solar eclipse for a given tjd;
@@ -338,7 +390,7 @@ class Swe4rTest < Test::Unit::TestCase
   # Lunar eclipses:
 
   def test_swe_lun_occult_when_glob
-    result = Swe4r.swe_lun_occult_when_glob(2_444_838.972916667, Swe4r::SE_SUN, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL)
+    result = Swe4r.swe_lun_occult_when_glob(2_444_838.972916667, Swe4r::SE_SUN, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL, false)
 
     assert_equal(5, result[0])
     assert_in_delta(2_445_496.689880746, result[1][1], DELTA)
@@ -352,7 +404,7 @@ class Swe4rTest < Test::Unit::TestCase
 
   # swe_lun_eclipse_when_loc(tjd...) finds the next lunar eclipse for a given geographic position;
   def test_swe_lun_eclipse_when_loc
-    result = Swe4r.swe_lun_eclipse_when_loc(2_444_838.972916667, 45.45, -112.183333, 0, Swe4r::SEFLG_MOSEPH)
+    result = Swe4r.swe_lun_eclipse_when_loc(2_444_838.972916667, 45.45, -112.183333, 0, Swe4r::SEFLG_MOSEPH, false)
 
     # assert_equal(test_data, result)
 
@@ -372,7 +424,7 @@ class Swe4rTest < Test::Unit::TestCase
 
   # swe_lun_eclipse_when(tjd...) finds the next lunar eclipse;
   def test_swe_lun_eclipse_when
-    result = Swe4r.swe_lun_eclipse_when(2_444_838.972916667, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL)
+    result = Swe4r.swe_lun_eclipse_when(2_444_838.972916667, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL, false)
 
     # assert_equal(test_data, result[1])
     eclipse_type = result[0]
@@ -387,6 +439,33 @@ class Swe4rTest < Test::Unit::TestCase
     ]
 
     assert_equal(expected_type_results, type_results)
+  end
+
+  def test_swe_lun_eclipse_when_known_2018_forward
+    # Longest total lunar eclipse of 2001–2100 (NASA catalog).
+    tjd_start = Swe4r.swe_julday(2018, 7, 1, 0)
+    result = Swe4r.swe_lun_eclipse_when(tjd_start, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL, false)
+
+    assert result[0].allbits?(Swe4r::SE_ECL_TOTAL)
+    assert_in_delta(LUN_ECL_2018_JUL_27_JD, result[1][0], ECLIPSE_DELTA)
+  end
+
+  def test_swe_lun_eclipse_when_known_2018_backward
+    tjd_start = Swe4r.swe_julday(2018, 8, 1, 0)
+    result = Swe4r.swe_lun_eclipse_when(tjd_start, Swe4r::SEFLG_MOSEPH, Swe4r::SE_ECL_TOTAL, true)
+
+    assert result[0].allbits?(Swe4r::SE_ECL_TOTAL)
+    assert_operator result[1][0], :<, tjd_start
+    assert_in_delta(LUN_ECL_2018_JUL_27_JD, result[1][0], ECLIPSE_DELTA)
+  end
+
+  def test_swe_lun_eclipse_when_loc_known_2018
+    # Visible from Europe (Milan area) on 2018 Jul 27.
+    tjd_start = Swe4r.swe_julday(2018, 7, 1, 0)
+    result = Swe4r.swe_lun_eclipse_when_loc(tjd_start, 10.0, 45.0, 0, Swe4r::SEFLG_MOSEPH, false)
+
+    assert result[0].allbits?(Swe4r::SE_ECL_TOTAL)
+    assert_in_delta(LUN_ECL_2018_JUL_27_JD, result[1][0], ECLIPSE_DELTA)
   end
 
   # swe_lun_eclipse_how() computes the attributes of a lunar eclipse for a given tjd.

@@ -2,7 +2,7 @@
 
 The Swe4r rubygem provides a C extension for the standard functions of the [Swiss Ephemeris API](http://www.astro.com/swisseph/).
 
-Requires Ruby >= 3.0.
+Requires Ruby >= 3.2.0.
 
 ## Installation
 
@@ -366,7 +366,7 @@ Swe4r::swe_mooncross_ut(x2cross, tjd_ut, iflag) → Float
 Find the next solar eclipse for a given geographic position.
 
 ```
-Swe4r::swe_sol_eclipse_when_loc(tjd_ut, geolon, geolat, altitude, iflag) → Array
+Swe4r::swe_sol_eclipse_when_loc(tjd_ut, geolon, geolat, altitude, iflag, backward) → Array
 ```
 
 - **tjd_ut** (`Float`) — start date for search (Julian day, UT)
@@ -374,6 +374,7 @@ Swe4r::swe_sol_eclipse_when_loc(tjd_ut, geolon, geolat, altitude, iflag) → Arr
 - **geolat** (`Float`) — geographic latitude in degrees
 - **altitude** (`Float`) — altitude above sea level in meters
 - **iflag** (`Integer`) — ephemeris flag
+- **backward** (`Boolean`) — `false` to search forward, `true` to search backward
 - Returns (`Array`) — `[retflag, tret, attr]` where:
   - `retflag` (`Integer`) — eclipse type flag (e.g. `SE_ECL_TOTAL`, `SE_ECL_ANNULAR`, `SE_ECL_PARTIAL`)
   - `tret` (`Array`) — 10 `Float` values (eclipse time data)
@@ -385,12 +386,13 @@ Swe4r::swe_sol_eclipse_when_loc(tjd_ut, geolon, geolat, altitude, iflag) → Arr
 Find the next solar eclipse globally.
 
 ```
-Swe4r::swe_sol_eclipse_when_glob(tjd_ut, iflag, ifltype) → Array
+Swe4r::swe_sol_eclipse_when_glob(tjd_ut, iflag, ifltype, backward) → Array
 ```
 
 - **tjd_ut** (`Float`) — start date for search (Julian day, UT)
 - **iflag** (`Integer`) — ephemeris flag
 - **ifltype** (`Integer`) — eclipse type wanted (e.g. `SE_ECL_TOTAL`, `SE_ECL_ANNULAR`, etc.) or 0 for any type
+- **backward** (`Boolean`) — `false` to search forward, `true` to search backward
 - Returns (`Array`) — `[retflag, tret]` where:
   - `retflag` (`Integer`) — eclipse type flag
   - `tret` (`Array`) — 10 `Float` values (eclipse time data)
@@ -437,7 +439,7 @@ Swe4r::swe_sol_eclipse_how(tjd_ut, geolon, geolat, altitude, iflag) → Array
 Find the next lunar eclipse for a given geographic position.
 
 ```
-Swe4r::swe_lun_eclipse_when_loc(tjd_ut, geolon, geolat, altitude, iflag) → Array
+Swe4r::swe_lun_eclipse_when_loc(tjd_ut, geolon, geolat, altitude, iflag, backward) → Array
 ```
 
 - **tjd_ut** (`Float`) — start date for search (Julian day, UT)
@@ -445,6 +447,7 @@ Swe4r::swe_lun_eclipse_when_loc(tjd_ut, geolon, geolat, altitude, iflag) → Arr
 - **geolat** (`Float`) — geographic latitude in degrees
 - **altitude** (`Float`) — altitude above sea level in meters
 - **iflag** (`Integer`) — ephemeris flag
+- **backward** (`Boolean`) — `false` to search forward, `true` to search backward
 - Returns (`Array`) — `[retflag, tret, attr]` where:
   - `retflag` (`Integer`) — eclipse type flag (e.g. `SE_ECL_TOTAL`, `SE_ECL_PENUMBRAL`, `SE_ECL_PARTIAL`)
   - `tret` (`Array`) — 10 `Float` values (eclipse time data)
@@ -456,12 +459,13 @@ Swe4r::swe_lun_eclipse_when_loc(tjd_ut, geolon, geolat, altitude, iflag) → Arr
 Find the next lunar eclipse globally.
 
 ```
-Swe4r::swe_lun_eclipse_when(tjd_ut, iflag, ifltype) → Array
+Swe4r::swe_lun_eclipse_when(tjd_ut, iflag, ifltype, backward) → Array
 ```
 
 - **tjd_ut** (`Float`) — start date for search (Julian day, UT)
 - **iflag** (`Integer`) — ephemeris flag
 - **ifltype** (`Integer`) — eclipse type wanted (e.g. `SE_ECL_TOTAL`, etc.) or 0 for any type
+- **backward** (`Boolean`) — `false` to search forward, `true` to search backward
 - Returns (`Array`) — `[retflag, tret]` where:
   - `retflag` (`Integer`) — eclipse type flag
   - `tret` (`Array`) — 10 `Float` values (eclipse time data)
@@ -492,13 +496,14 @@ Swe4r::swe_lun_eclipse_how(tjd_ut, geolon, geolat, altitude, iflag) → Array
 Find the next occultation of a given body globally.
 
 ```
-Swe4r::swe_lun_occult_when_glob(tjd_ut, ipl, iflag, ifltype) → Array
+Swe4r::swe_lun_occult_when_glob(tjd_ut, ipl, iflag, ifltype, backward) → Array
 ```
 
 - **tjd_ut** (`Float`) — start date for search (Julian day, UT)
 - **ipl** (`Integer`) — planet number
 - **iflag** (`Integer`) — ephemeris flag
 - **ifltype** (`Integer`) — eclipse/occultation type wanted or 0 for any type
+- **backward** (`Boolean`) — `false` to search forward, `true` to search backward
 - Returns (`Array`) — `[retflag, tret]` where:
   - `retflag` (`Integer`) — occultation type flag
   - `tret` (`Array`) — 10 `Float` values (event time data)

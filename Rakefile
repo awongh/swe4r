@@ -14,7 +14,10 @@ task :install do
   puts 'uninstalling'
   `gem uninstall swe4r`
   puts 'building'
-  `gem build`
-  `gem install --local ./swe4r-1.0.gem`
+  `gem build swe4r.gemspec`
+  gemfile = Dir['swe4r-*.gem'].max
+  raise 'no swe4r-*.gem built' unless gemfile
+
+  `gem install --local ./#{gemfile}`
   puts 'done!'
 end
