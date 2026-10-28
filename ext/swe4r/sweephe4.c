@@ -670,7 +670,6 @@ static int inpolq(int n, int o, double p, double *x, double *axu, double *adxu)
 
 static char *my_makepath(char *d, char *s)
 {
-  char *getenv();
   if (*s == *DIR_GLUE || *s == '/' || strchr (s, ':') != NULL) {
     strcpy (d, s);	/* s is absolute path name */
   }
