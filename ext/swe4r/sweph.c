@@ -8322,7 +8322,8 @@ double CALL_CONV swe_solcross(double x2cross, double jd_et, int flag, char *serr
 {
   double x[6], xlp, dist;
   double jd;
-  int ipl = SE_SUN;
+  /* A heliocentric solar crossing is the crossing of Earth. */
+  int ipl = (flag & SEFLG_HELCTR) ? SE_EARTH : SE_SUN;
   /*
    * compute the SUN at start date, and then estimate the crossing date
    */
@@ -8356,7 +8357,8 @@ double CALL_CONV swe_solcross_ut(double x2cross, double jd_ut, int flag, char *s
 {
   double x[6], xlp, dist;
   double jd;
-  int ipl = SE_SUN;
+  /* A heliocentric solar crossing is the crossing of Earth. */
+  int ipl = (flag & SEFLG_HELCTR) ? SE_EARTH : SE_SUN;
   /*
    * compute the SUN at start date, and then estimate the crossing date
    */

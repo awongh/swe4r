@@ -14,11 +14,10 @@ Install the gem as usual:
 
 ## Testing
 
-Build and install the gem locally, then run the test suite:
+Run the test suite against the native extension built from this checkout:
 
 ```
 bundle install
-rake install
 rake test
 ```
 
@@ -27,6 +26,21 @@ rake test
 ```
 rake
 ```
+
+`rake test` compiles the local extension before loading it; an installed copy of
+the gem is not used. The regression suite runs potentially unsafe native calls in
+subprocesses with a timeout so a crash or hang fails the test safely.
+
+To check native buffer access with AddressSanitizer:
+
+```
+rake asan
+```
+
+This builds a temporary instrumented extension and runs the entire suite against
+it. It requires a compiler with AddressSanitizer support (Clang on macOS, Clang
+or GCC on Linux). Leak detection is disabled by default because Ruby itself is
+not instrumented. Set `CC`, `MAKE`, or `ASAN_OPTIONS` to override tool defaults.
 
 ## Methods
 
@@ -181,7 +195,7 @@ Swe4r::swe_houses(tjd_ut, geolat, geolon, hsys) → Array
 - **geolon** (`Float`) — geographic longitude in degrees
 - **hsys** (`String` or `Integer`) — house system as a single character (e.g. `'P'`=Placidus, `'K'`=Koch, `'O'`=Porphyrius, `'R'`=Regiomontanus, `'C'`=Campanus, `'A'` or `'E'`=Equal, `'V'`=Vehlow, `'W'`=Whole sign, `'X'`=Axial rotation, `'H'`=Horizontal, `'T'`=Polich/Page, `'B'`=Alcabitus, `'M'`=Morinus, `'U'`=Krusinski-Pisa, `'G'`=Gauquelin sectors)
 - Returns (`Array`) — `[cusps, ascmc]` where:
-  - `cusps` is an `Array` of 13 `Float` values (index 1–12 = house cusps 1–12)
+  - `cusps` is an `Array` of 13 `Float` values (index 1–12 = house cusps 1–12), or 37 for `'G'` (index 1–36 = Gauquelin sectors)
   - `ascmc` is an `Array` of 10 `Float` values (index 0=Ascendant, 1=MC, 2=ARMC, 3=Equatorial Ascendant, 4=Co-Ascendant Koch, 5=Co-Ascendant Munkasey, 6=Polar Ascendant Munkasey)
 - Raises `RuntimeError` on error
 
@@ -199,9 +213,9 @@ Swe4r::swe_houses_ex2(tjd_ut, iflag, geolat, geolon, hsys) → Array
 - **geolon** (`Float`) — geographic longitude in degrees
 - **hsys** (`String` or `Integer`) — house system character (see `swe_houses`)
 - Returns (`Array`) — `[cusps, ascmc, cusps_speed, ascmc_speed]` where:
-  - `cusps` is an `Array` of 13 `Float` values (house cusps)
+  - `cusps` is an `Array` of 13 `Float` values (house cusps), or 37 for `'G'` (Gauquelin sectors)
   - `ascmc` is an `Array` of 10 `Float` values (angles)
-  - `cusps_speed` is an `Array` of 13 `Float` values (daily motion of house cusps)
+  - `cusps_speed` has the same length as `cusps` (daily motion of cusps or sectors)
   - `ascmc_speed` is an `Array` of 10 `Float` values (daily motion of angles)
 - Raises `RuntimeError` on error
 
@@ -302,6 +316,10 @@ Swe4r::swe_rise_trans_true_hor(tjd_ut, body, epheflag, rsmi, geolon, geolat, hei
 - Raises `RuntimeError` on error
 
 ### Crossings
+
+The solar crossing methods also accept `SEFLG_HELCTR`, in which case they find
+Earth's heliocentric longitude crossing. Both ET and UT variants use this
+convention.
 
 #### swe_solcross
 

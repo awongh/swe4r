@@ -1079,16 +1079,17 @@ static int32 eclipse_how( double tjd_ut, int32 ipl, char *starname, int32 ifl,
   lsun = rsun;
   lmoon = rmoon;
   lctr = dctr;
-  if (retc == 0 || lsun == 0) {
-    //attr[2] = 100;
+  if (retc == 0) {
+    attr[2] = 0;
+  } else if (lsun == 0 || retc == SE_ECL_TOTAL) {
     attr[2] = 1;
-  } else if (retc == SE_ECL_TOTAL || retc == SE_ECL_ANNULAR) {
+  } else if (retc == SE_ECL_ANNULAR) {
     attr[2] = lmoon * lmoon / lsun / lsun;
   } else {
     a = 2 * lctr * lmoon;
     b = 2 * lctr * lsun;
     if (a < 1e-9) {
-      attr[2] = lmoon * lmoon / lsun / lsun;
+      attr[2] = fmin(1.0, lmoon * lmoon / lsun / lsun);
     } else {
       a = (lctr * lctr + lmoon * lmoon - lsun * lsun) / a;
       if (a > 1) a = 1;
