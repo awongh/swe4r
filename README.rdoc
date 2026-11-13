@@ -27,6 +27,14 @@ The following functions of the {Swiss Ephemeris API}[http://www.astro.com/swisse
 
 === Configuration
 
+==== swe_version
+
+Get the version of the bundled native Swiss Ephemeris library, independently of the Ruby gem version.
+
+  Swe4r.swe_version # => "2.10.03"
+
+* Returns (+String+) — native library version
+
 ==== swe_set_ephe_path
 
 Set directory path of ephemeris files. Not required when using the Moshier Ephemeris.
@@ -88,6 +96,38 @@ Get year, month, day, and hour from a Julian day number.
 * +gregflag+ (+Integer+, optional) — +SE_GREG_CAL+ (1, default) for Gregorian, +SE_JUL_CAL+ (0) for Julian calendar
 * Returns (+Array+) — <tt>[year, month, day, hour]</tt> where year/month/day are +Integer+ and hour is +Float+
 
+==== swe_utc_to_jd
+
+Convert UTC date/time components to Julian days in Terrestrial Time (TT) and Universal Time (UT1).
+Initialize the ephemeris path with +swe_set_ephe_path+ before time conversion or position calculations.
+
+  jd_tt, jd_ut1 = Swe4r.swe_utc_to_jd(2000, 1, 1, 12, 34, 56.125)
+  # Optional final argument: Swe4r::SE_GREG_CAL (default) or Swe4r::SE_JUL_CAL
+
+* Arguments: +year+, +month+, +day+, +hour+, +minute+ (+Integer+), +second+ (+Float+), and optional +gregflag+ (+Integer+)
+* Returns (+Array+) — <tt>[julian_day_tt, julian_day_ut1]</tt>, both +Float+
+* Seconds may have a fractional part; valid leap seconds can be expressed as <tt>60.0 <= second < 61.0</tt>.
+* Raises +RuntimeError+ with the native error message for invalid dates, times, or leap seconds; raises +ArgumentError+ for nonfinite seconds or an unsupported calendar flag.
+
+Pass +jd_ut1+ to +swe_calc_ut+ or +swe_calc_ut_with_metadata+. The native position function handles Delta T; do not add it again.
+Unlike +swe_julday+, this function performs time-scale conversion as well as calendar conversion.
+
+==== swe_jdet_to_utc and swe_jdut1_to_utc
+
+Convert Julian TT or UT1 back to UTC calendar components, including fractional seconds and leap seconds.
+
+  Swe4r.swe_jdet_to_utc(jd_tt)    # => [2000, 1, 1, 12, 34, 56.125...]
+  Swe4r.swe_jdut1_to_utc(jd_ut1)  # => [2000, 1, 1, 12, 34, 56.125...]
+  # Both accept an optional second argument: SE_GREG_CAL (default) or SE_JUL_CAL.
+
+* Returns (+Array+) — <tt>[year, month, day, hour, minute, second]</tt>; the first five values are +Integer+, and seconds are +Float+.
+* Raises +ArgumentError+ for a nonfinite Julian day or an unsupported calendar flag.
+
+These three bindings retain Swiss Ephemeris's time-scale policy: before 1972, calendar input/output is treated as UT1.
+From 1972 onward, conversion uses the native leap-second table and Delta T model. When that table is deemed outdated, the native library falls back to interpreting calendar times as UT1.
+Future leap seconds are unknown; these bindings do not supply measured Earth-orientation data. Additional leap seconds can be supplied in +seleapsec.txt+ in the ephemeris directory.
+See the {native time-conversion documentation}[https://www.astro.com/swisseph/swephprg.htm], sections 9.2–9.3.
+
 === Planet and Body Positions
 
 ==== swe_calc_ut
@@ -101,6 +141,25 @@ Compute positions of planets, moon, asteroids, lunar nodes, apogees, and fictiti
 * +iflag+ (+Integer+) — bit flags for computation type (e.g. +SEFLG_MOSEPH+, +SEFLG_SPEED+, +SEFLG_TOPOCTR+, +SEFLG_SIDEREAL+)
 * Returns (+Array+) — 6 +Float+ values: <tt>[longitude, latitude, distance, speed_in_longitude, speed_in_latitude, speed_in_distance]</tt>
 * Raises +RuntimeError+ on error
+
+==== swe_calc_ut_with_metadata
+
+Compute the same six position/speed values as +swe_calc_ut+, while also returning the native effective flags and any warning from that call.
+Both methods make one native +swe_calc_ut+ call; the original method continues to return its six-element array.
+
+  result = Swe4r.swe_calc_ut_with_metadata(jd_ut1, Swe4r::SE_SUN,
+                                        Swe4r::SEFLG_SWIEPH | Swe4r::SEFLG_SPEED)
+  result[:values]          # => [longitude, latitude, distance, longitude_speed, latitude_speed, distance_speed]
+  result[:effective_flags] # => Integer: flags returned by the native calculation
+  result[:warning]         # => String, or nil when the native warning buffer is empty
+
+* Arguments are identical to +swe_calc_ut+: Julian UT1, body number, and requested flags.
+* Returns (+Hash+) — symbol keys <tt>:values</tt>, <tt>:effective_flags</tt>, and <tt>:warning</tt>.
+* Raises +RuntimeError+ with the native error message on calculation failure, as +swe_calc_ut+ does.
+
+Effective flags can differ from the requested flags: the native library may add/remove options or fall back to another ephemeris.
+Check <tt>:effective_flags</tt> to identify the computation actually performed; warning text alone is not a reliable fallback indicator.
+The native library version is available separately through +swe_version+.
 
 ==== swe_get_ayanamsa_ut
 

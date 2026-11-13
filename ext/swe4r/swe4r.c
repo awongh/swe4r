@@ -77,6 +77,13 @@ static VALUE t_swe_set_jpl_file(VALUE self, VALUE path)
 	return Qnil;
 }
 
+/* Return the version of the bundled native Swiss Ephemeris library. */
+static VALUE t_swe_version(VALUE self)
+{
+	char version[AS_MAXCH] = {0};
+	return rb_str_new_cstr(swe_version(version));
+}
+
 /*
  * Get the Julian day number from year, month, day, hour
  * http://www.astro.com/swisseph/swephprg.htm#_Toc283735468
@@ -132,6 +139,65 @@ static VALUE t_swe_revjul(int argc, VALUE *argv, VALUE self) {
 	return output;
 }
 
+/* The UTC conversion functions accept only the two documented calendars. */
+static int utc_calendar_flag(int argc, int required, VALUE value)
+{
+	int greg_flag = (argc == required) ? SE_GREG_CAL : NUM2INT(value);
+	if (greg_flag != SE_GREG_CAL && greg_flag != SE_JUL_CAL)
+		rb_raise(rb_eArgError, "gregflag must be SE_GREG_CAL or SE_JUL_CAL");
+	return greg_flag;
+}
+
+/* Convert UTC calendar components to [Julian TT, Julian UT1]. */
+static VALUE t_swe_utc_to_jd(int argc, VALUE *argv, VALUE self)
+{
+	VALUE year, month, day, hour, minute, second, calendar;
+	rb_scan_args(argc, argv, "61", &year, &month, &day, &hour, &minute, &second, &calendar);
+	int greg_flag = utc_calendar_flag(argc, 6, calendar);
+	double seconds = NUM2DBL(second);
+	if (!isfinite(seconds))
+		rb_raise(rb_eArgError, "second must be finite");
+
+	double results[2];
+	char serr[AS_MAXCH] = {0};
+	if (swe_utc_to_jd(NUM2INT(year), NUM2INT(month), NUM2INT(day),
+		NUM2INT(hour), NUM2INT(minute), seconds, greg_flag, results, serr) < 0)
+		rb_raise(rb_eRuntimeError, "%s", serr);
+
+	return rb_ary_new_from_args(2, rb_float_new(results[0]), rb_float_new(results[1]));
+}
+
+/* Both native inverse conversions return [year, month, day, hour, minute, second]. */
+static VALUE julian_day_to_utc(int argc, VALUE *argv, int terrestrial_time)
+{
+	VALUE julian_day, calendar;
+	rb_scan_args(argc, argv, "11", &julian_day, &calendar);
+	int greg_flag = utc_calendar_flag(argc, 1, calendar);
+	double jd = NUM2DBL(julian_day);
+	if (!isfinite(jd))
+		rb_raise(rb_eArgError, "Julian day must be finite");
+
+	int32 year, month, day, hour, minute;
+	double second;
+	if (terrestrial_time)
+		swe_jdet_to_utc(jd, greg_flag, &year, &month, &day, &hour, &minute, &second);
+	else
+		swe_jdut1_to_utc(jd, greg_flag, &year, &month, &day, &hour, &minute, &second);
+
+	return rb_ary_new_from_args(6, INT2NUM(year), INT2NUM(month), INT2NUM(day),
+		INT2NUM(hour), INT2NUM(minute), rb_float_new(second));
+}
+
+static VALUE t_swe_jdet_to_utc(int argc, VALUE *argv, VALUE self)
+{
+	return julian_day_to_utc(argc, argv, 1);
+}
+
+static VALUE t_swe_jdut1_to_utc(int argc, VALUE *argv, VALUE self)
+{
+	return julian_day_to_utc(argc, argv, 0);
+}
+
 /*
  * Set the geographic location for topocentric planet computation
  * The longitude and latitude must be in degrees, the altitude in meters.
@@ -159,19 +225,36 @@ static VALUE t_swe_set_topo(VALUE self, VALUE lon, VALUE lat, VALUE alt)
 		char *serr		// 256 bytes for error string
 	);
  */
-static VALUE t_swe_calc_ut(VALUE self, VALUE julian_ut, VALUE body, VALUE iflag)
+static VALUE calc_ut(VALUE julian_ut, VALUE body, VALUE iflag, int with_metadata)
 {
 	double results[6];
 	char serr[AS_MAXCH] = {0};
 
-	if (swe_calc_ut(NUM2DBL(julian_ut), NUM2INT(body), NUM2LONG(iflag), results, serr) < 0)
+	int32 effective_flags = swe_calc_ut(NUM2DBL(julian_ut), NUM2INT(body), NUM2LONG(iflag), results, serr);
+	if (effective_flags < 0)
 		rb_raise(rb_eRuntimeError, "%s", serr);
 
-	VALUE output = rb_ary_new();
+	VALUE values = rb_ary_new_capa(6);
 	for (int i = 0; i < 6; i++)
-		rb_ary_push(output, rb_float_new(results[i]));
+		rb_ary_push(values, rb_float_new(results[i]));
+	if (!with_metadata)
+		return values;
 
+	VALUE output = rb_hash_new();
+	rb_hash_aset(output, ID2SYM(rb_intern("values")), values);
+	rb_hash_aset(output, ID2SYM(rb_intern("effective_flags")), INT2NUM(effective_flags));
+	rb_hash_aset(output, ID2SYM(rb_intern("warning")), serr[0] ? rb_str_new_cstr(serr) : Qnil);
 	return output;
+}
+
+static VALUE t_swe_calc_ut(VALUE self, VALUE julian_ut, VALUE body, VALUE iflag)
+{
+	return calc_ut(julian_ut, body, iflag, 0);
+}
+
+static VALUE t_swe_calc_ut_with_metadata(VALUE self, VALUE julian_ut, VALUE body, VALUE iflag)
+{
+	return calc_ut(julian_ut, body, iflag, 1);
 }
 
 /*
@@ -836,10 +919,15 @@ void Init_swe4r()
 	// Module Functions
 	rb_define_module_function(rb_mSwe4r, "swe_set_ephe_path", t_swe_set_ephe_path, 1);
 	rb_define_module_function(rb_mSwe4r, "swe_set_jpl_file", t_swe_set_jpl_file, 1);
+	rb_define_module_function(rb_mSwe4r, "swe_version", t_swe_version, 0);
 	rb_define_module_function(rb_mSwe4r, "swe_julday", t_swe_julday, -1);
 	rb_define_module_function(rb_mSwe4r, "swe_revjul", t_swe_revjul, -1);
+	rb_define_module_function(rb_mSwe4r, "swe_utc_to_jd", t_swe_utc_to_jd, -1);
+	rb_define_module_function(rb_mSwe4r, "swe_jdet_to_utc", t_swe_jdet_to_utc, -1);
+	rb_define_module_function(rb_mSwe4r, "swe_jdut1_to_utc", t_swe_jdut1_to_utc, -1);
 	rb_define_module_function(rb_mSwe4r, "swe_set_topo", t_swe_set_topo, 3);
 	rb_define_module_function(rb_mSwe4r, "swe_calc_ut", t_swe_calc_ut, 3);
+	rb_define_module_function(rb_mSwe4r, "swe_calc_ut_with_metadata", t_swe_calc_ut_with_metadata, 3);
 	rb_define_module_function(rb_mSwe4r, "swe_set_sid_mode", t_swe_set_sid_mode, 3);
 	rb_define_module_function(rb_mSwe4r, "swe_get_ayanamsa_ut", t_swe_get_ayanamsa_ut, 1);
 	rb_define_module_function(rb_mSwe4r, "swe_houses", t_swe_houses, 4);

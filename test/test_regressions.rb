@@ -68,6 +68,24 @@ class Swe4rRegressionTest < Test::Unit::TestCase
     assert_equal(Array.new(9, 0.0), result[2][11..])
   end
 
+  def test_calculation_metadata_exposes_ephemeris_fallback_and_warning
+    result = isolated_result(<<~RUBY)
+      require 'tmpdir'
+      Dir.mktmpdir('swe4r-empty-ephe-') do |directory|
+        ENV['SE_EPHE_PATH'] = directory
+        Swe4r.swe_set_ephe_path(directory)
+        Swe4r.swe_calc_ut_with_metadata(#{J2000}, Swe4r::SE_SUN, Swe4r::SEFLG_SWIEPH | Swe4r::SEFLG_SPEED)
+      end
+    RUBY
+
+    effective_flags = result.fetch('effective_flags')
+    assert_equal(Swe4r::SEFLG_MOSEPH, effective_flags & Swe4r::SEFLG_MOSEPH)
+    assert_equal(0, effective_flags & Swe4r::SEFLG_SWIEPH)
+    assert_equal(Swe4r::SEFLG_SPEED, effective_flags & Swe4r::SEFLG_SPEED)
+    assert_equal(6, result.fetch('values').length)
+    assert_match(/using Moshier eph/, result.fetch('warning'))
+  end
+
   def test_solar_where_during_eclipse_keeps_two_coordinate_api
     result = isolated_result("Swe4r.swe_sol_eclipse_where(#{TOTAL_ECLIPSE}, #{FLAGS})")
     assert_not_equal(0, result[0] & Swe4r::SE_ECL_TOTAL)
